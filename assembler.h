@@ -16,6 +16,24 @@ unsigned int DC; /* The data counter */
 #define MAX_SYMBOL_LENGTH 30
 #define SYMBOL_END_CHAR ':'
 
+/* Addressing Modes */
+#define IMMEDIATE_ADDRESSING_MODE "000"
+#define DIRECT_ADDRESSING_MODE "001"
+#define INDEX_ADDRESSING_MODE "010"
+#define INDEX2D_ADDRESSING_MODE "011"
+#define REGISTER_ADDRESSING_MODE "100"
+
+/* Assembly command parts */
+#define SOURCE_ADDRESING_MODE_OFFSET 4
+#define SOURCE_REGISTER_OFFSET 7
+#define DESTINATION_ADDRESING_MODE_OFFSET 10
+#define DESTINATION_REGISTER_OFFSET 13
+#define ADDRESSING_MODE_BITS_LENGTH 3
+#define REGISTER_BITS_LENGTH 3
+
+
+#define NOT_REGISTER_OPERAND "000"
+
 /* Assembler keywords */
 #define DATA_GUIDANCE ".data"
 #define STRING_GUIDANCE ".string"
