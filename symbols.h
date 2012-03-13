@@ -1,9 +1,9 @@
 #ifndef SYMBOLS_H_
 #define SYMBOLS_H_
 
-#define MAX_SYMBOL_NAME_SIZE 30
+
 #define BASE_2_VALUE_SIZE 8
-#define SYMBOL_END_CHAR ':'
+
 
 typedef enum
 {
@@ -14,7 +14,7 @@ typedef enum
 
 typedef struct
 {
-	char name[MAX_SYMBOL_NAME_SIZE];
+	char *name;
 	unsigned int value;
 	SymbolType type;
 

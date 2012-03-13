@@ -1,9 +1,14 @@
+#include <stdio.h>
 #include <ctype.h>
+#include <string.h>
 #include "assembler.h"
 #include "parser.h"
 
-bool isValidSymbol(char *symbol);
+int isValidSymbol(char *symbol);
 
+/* Validates a given assembly command line        */
+/* returns NULL if the command line is valid      */
+/* or an error message otherwise.                 */
 char *validateCommandLine(char *line)
 {
 
@@ -21,7 +26,7 @@ char *validateCommandLine(char *line)
 
 
 
-bool isValidSymbol(char *symbol)
+int isValidSymbol(char *symbol)
 {
 	int i=1, length;
 
@@ -48,6 +53,8 @@ bool isValidSymbol(char *symbol)
 		return 0;
 
 	}
+
+	return 1;
 
 }
 

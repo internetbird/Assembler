@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdlib.h>
 #include "parser.h"
 #include "symbols.h"
 #include "registers.h"
@@ -24,7 +25,7 @@ CommandParts getEmptyCommandParts();
 int isLineContainsSymbol(char *line);
 char *getSubstringAfterSymbol(char *line);
 char *getSubstringAfterCommand(char *line);
-char *convertTo2sComplement(char base2Positive[]);
+void convertTo2sComplement(char base2Positive[]);
 int sourceOperandExists(char *line);
 
 
@@ -118,7 +119,7 @@ CommandParts parseAssemblyLine(char *line)
 
 	}
 
-
+	return parts;
 
 }
 
@@ -186,6 +187,8 @@ char *extractSymbolName(char *line)
 			i++;
 	}
 
+	symbolName = (char *)malloc(i+1);
+	if(symbolName == NULL) return NULL;
 
 	strncpy(symbolName, line, i);
 	symbolName[i] = '\0';
@@ -217,14 +220,14 @@ char *extractGuidanceData(char *line)
 /*Extracts the first number string in the given data string */
 char *extractFirstGuidanceData(char *data)
 {
-	return strtok(data, ',');
+	return strtok(data, ",");
 }
 
 /*Extracts the next number string in the given data string. */
 /*Returns NULL if there are no more values to return */
 char *extractNextGuidanceData()
 {
-	return strtok(NULL, ',');
+	return strtok(NULL, ",");
 
 }
 
@@ -235,10 +238,13 @@ char *extractGuidanceString(char *line)
 	stringStart = strchr(line, '"');
 	stringEnd = strrchr(line, '"');
 
-	strncpy(guidanceString, stringStart+1, stringEnd - stringStart);
+	guidanceString = (char *)malloc(stringEnd-stringStart);
+	if(guidanceString == NULL) return NULL;
+
+	strncpy(guidanceString, stringStart+1, stringEnd - stringStart - 1);
 
 	/*Add 0 to the end of the string */
-	*(guidanceString + stringEnd - stringStart) = 0;
+	guidanceString[stringEnd - stringStart] = '\0';
 
 	return guidanceString;
 }
@@ -257,7 +263,10 @@ char *extractSourceOperand(char *line)
 	/*Find the end of the source operand*/
 	operandEnd =  strchr(line, ',');
 
-	strncpy(operand, line+i, operandEnd - line - i);
+	operand = (char *)malloc(operandEnd- line -i);
+	if(operand == NULL) return NULL;
+
+	strncpy(operand, line+i, operandEnd - line - i - 1);
 
 	/*Set the end of the operand string */
 	operand[operandEnd - line - i] = '\0';
@@ -274,13 +283,21 @@ char *extractDestinationOperand(char *line)
 	char *operand;
 	char *startOperand;
 
-	if((startOperand = strchr(line, ',')) != NULL) /*If there are 2 operands, extract the second*/
-	{
+	startOperand = strchr(line, ',');
 
-		sscanf(startOperand+1, "%s", operand);
+	if(startOperand != NULL) /*If there are 2 operands, extract the second*/
+	{
+	    operand = (char *)malloc(strlen(startOperand+1));
+	    if(operand == NULL) return NULL;
+
+	    sscanf(startOperand+1, "%s", operand);
+
 	}
+
 	 else /*There is only one operand, extract it. */
 	{
+		operand = (char *)malloc(strlen(line));
+		if(operand == NULL) return NULL;
 		sscanf(line, "%s", operand);
 
 	}
@@ -296,6 +313,9 @@ char *extractDestinationOperand(char *line)
 char *extractCommandName(char *line)
 {
 	char *commandName;
+
+	commandName = (char *)malloc(COMMAND_CHAR_LENGTH + 1);
+	if(commandName == NULL) return NULL;
 
 	sscanf(line, "%s", commandName);
 
@@ -358,19 +378,14 @@ int isLineContainsSymbol(char *line)
 */
 
 
-/* Validates a given assembly command line        */
-/* returns NULL if the command line is valid      */
-/* or an error message otherwise.                 */
 
-char *validateCommandLine(char *line)
-{
-	return NULL;
 
-}
+
 
 /* Returns the base2 value of the addressing mode for the given operand*/
+/* The function assumes a valid operand */
 
-const char *parseAddressingMode(char *operand)
+char *parseAddressingMode(char *operand)
 {
 	if(isRegister(operand))
 	{
@@ -413,8 +428,12 @@ const char *parseCommand(char *command)
 
 char *convertBase10toBase2(int base10)
 {
-	char base2Word[WORD_SIZE], temp;
+	char *base2Word, temp;
 	int i, isNegative;
+
+	base2Word = (char *)malloc(WORD_SIZE+1);
+
+	if(base2Word == NULL) return NULL;
 
 	if(base10 < 0)
 	{
@@ -438,9 +457,12 @@ char *convertBase10toBase2(int base10)
 		i = i/2;
 	}
 
+	base2Word[WORD_SIZE] = '\0';
+
 	if(isNegative)
 	{
-		base2Word = convertTo2sComplement(base2Word);
+
+		convertTo2sComplement(base2Word);
 	}
 
 	/*Reverse the string (MSB is first)*/
@@ -457,7 +479,7 @@ char *convertBase10toBase2(int base10)
 
 /* Converts a positive base 2 value to its 2's complement negative value*/
 
-char *convertTo2sComplement(char base2Positive[])
+void convertTo2sComplement(char *base2Positive)
 {
 	char base2Negative[WORD_SIZE];
 	int i;
@@ -481,17 +503,18 @@ char *convertTo2sComplement(char base2Positive[])
 	{
 		if(base2Negative[i] == '1')
 		{
-			base2Negative[i] == '0';
+			base2Negative[i] = '0';
 
 		} else /* equals '0' */
 		{
-			base2Negative[i] == '1';
+			base2Negative[i] = '1';
 			break;
 
 		}
 	}
 
-	return base2Negative;
+	/*Copy the negative value to the positive value*/
+	strncpy(base2Positive, base2Negative, WORD_SIZE);
 
 }
 
@@ -505,6 +528,9 @@ char *extractExternSymbolName(char *line)
 	temp = strstr(line, EXTERN_GUIDANCE);
 	temp = (temp + strlen(EXTERN_GUIDANCE));
 
+	symbol = (char *)malloc(strlen(temp));
+	if(symbol == NULL) return NULL;
+
 	sscanf(temp , "%s", symbol);
 
 	return symbol;
@@ -513,6 +539,7 @@ char *extractExternSymbolName(char *line)
 
 int sourceOperandExists(char *line)
 {
+	return 1;
 
 }
 

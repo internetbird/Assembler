@@ -5,14 +5,17 @@
 #include "symbols.h"
 #include "validator.h"
 #include "commands.h"
+#include "registers.h"
+
+char *getEmptyInstructionWord();
 
 int executeFirstPass(FILE *assemblyFile)
 {
 
 	int lineNum = 1, numOfInsertedWords;
 	int lineContainsSymbol = 0;
-	char line[100], instructionWord[WORD_SIZE];
-	char *validationMsg, *commandBase2Code, *operand;
+	char line[100], *instructionWord;
+	char *validationMsg, *commandBase2Code, *addressingMode;
 	StatementType type;
 	CommandParts parts;
 
@@ -63,24 +66,56 @@ int executeFirstPass(FILE *assemblyFile)
 							insertSymbol(parts.symbol, CODE, IC);
 						}
 
+						instructionWord = getEmptyInstructionWord();
+
 						/*Get the command base2 code */
 						commandBase2Code = getCommandBase2Code(parts.command);
 
 						/*Copy the command bits to the instruction word*/
 						strncpy(instructionWord, commandBase2Code, COMMAND_BITS_LENGTH);
 
-						/*Copy the source operand addressing mode bits to the instruction word*/
-						operand = extractSourceOperand(line);
 
-						/*Copy the source register bits to the instruction word*/
+						if(parts.sourceOperand != NULL)
+						{
+							addressingMode = parseAddressingMode(parts.sourceOperand);
 
-						/*Copy the destination operand addressing mode bits to the instruction word*/
-						operand = extractDestinationOperand(line);
+							/*Copy the source operand addressing mode bits to the instruction word*/
+							strncpy(instructionWord + SOURCE_ADDRESING_MODE_OFFSET,
+									addressingMode ,
+									ADDRESSING_MODE_BITS_LENGTH);
 
-						/*Copy the destination register bits to the instruction word*/
+							/*If it's a register addressing mode, copy the source register bits to the instruction word*/
+							if(strcmp(addressingMode, REGISTER_ADDRESSING_MODE) == 0)
+							{
+								strncpy(instructionWord + SOURCE_REGISTER_OFFSET,
+										getRegisterBase2Code(parts.sourceOperand),
+										REGISTER_BITS_LENGTH);
+							}
+
+						}
 
 
-						insertInstrunctionToMemory(instructionWord);
+
+						if(parts.destinationOperand != NULL)
+						{
+							addressingMode = parseAddressingMode(parts.destinationOperand);
+
+							/*Copy the destination operand addressing mode bits to the instruction word*/
+							strncpy(instructionWord + DESTINATION_ADDRESING_MODE_OFFSET,
+																addressingMode ,
+																ADDRESSING_MODE_BITS_LENGTH);
+
+							/*If it's a register addressing mode, copy the destination register bits to the instruction word*/
+							if(strcmp(addressingMode, REGISTER_ADDRESSING_MODE) == 0)
+							{
+								strncpy(instructionWord + DESTINATION_REGISTER_OFFSET,
+										getRegisterBase2Code(parts.destinationOperand),
+										REGISTER_BITS_LENGTH);
+							}
+						}
+
+
+						insertInstructionToMemory(instructionWord);
 
 					}
 
@@ -97,3 +132,23 @@ int executeFirstPass(FILE *assemblyFile)
 
 	return 0;
 }
+
+char *getEmptyInstructionWord()
+{
+	char *word;
+	int i;
+
+	word = (char *)malloc(WORD_SIZE+1);
+	if(word == NULL) exit(1);
+
+	for(i=0; i<WORD_SIZE; i++)
+	{
+		word[i] = '0';
+
+	}
+	word[WORD_SIZE] = '\0';
+
+	return word;
+
+}
+

@@ -3,6 +3,7 @@
 #define COMMANDS_H_
 
 #define COMMAND_BITS_LENGTH 4
+#define COMMAND_CHAR_LENGTH 3
 
 /* Gets the assembly base2 command code by command name */
 char *getCommandBase2Code(char *command_name);

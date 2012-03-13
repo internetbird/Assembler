@@ -53,12 +53,11 @@ StatementType getStatementType(char *line);
 CommandParts parseAssemblyLine(char *line);
 
 /* Returns the base2 value of the addressing mode for the given operand*/
-const char *parseAddressingMode(char *operand);
+/* The function assumes a valid operand */
+char *parseAddressingMode(char *operand);
 
 const char *parseOperand(char *operand);
 const char *parseCommand(char *command);
-
-
 
 char *extractFirstGuidanceData(char *data);
 /*Extracts the next number string in the data string that was initialized in the extractFirstGuidanceData method. */
