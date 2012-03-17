@@ -6,21 +6,18 @@
 #include "secondpass.h"
 #include "assembler.h"
 
+unsigned int IC; /* The instruction counter */
+unsigned int DC; /* The data counter */
+
+
 char *DataMemory[DATA_MEMORY_SIZE];
 char *InstructionMemory[INSTRUCTION_MEMORY_SIZE];
-
-unsigned int dataMemoryPosition;
-unsigned int instructionMemoryPosition;
 
 void insertIntToDataMemory(int value);
 
 int main(int argc, char *argv[])
 {
 	FILE *file;
-
-	IC = IC_STARTUP_VALUE;
-	dataMemoryPosition = 0;
-	instructionMemoryPosition = 0;
 
 	if((file = fopen(argv[1], "r")) != NULL)
 	{
@@ -36,9 +33,9 @@ int main(int argc, char *argv[])
 
 /* Inserts a data or string to the data memory image. */
 /* The function assumes that the line contains a data guidance command. */
-/* Returns the number of inserted words. */
 
-int insertDataToMemory(char *line)
+
+void insertDataToMemory(char *line)
 {
 	StatementType type;
 	char *data;
@@ -78,14 +75,14 @@ int insertDataToMemory(char *line)
 
 	}
 
-	return insertedWords;
+	DC = DC + insertedWords;
 
 }
 
 void insertInstructionToMemory(char *word)
 {
-	InstructionMemory[instructionMemoryPosition] = word;
-	instructionMemoryPosition ++;
+	InstructionMemory[IC] = word;
+	IC++;
 
 }
 
@@ -96,9 +93,9 @@ void insertIntToDataMemory(int value)
 	char *word;
 
 	word = convertBase10toBase2(value);
-	DataMemory[dataMemoryPosition] = word;
+	DataMemory[DC] = word;
 
-	dataMemoryPosition++;
+	DC++;
 
 }
 
@@ -108,6 +105,45 @@ void addAssemblerError(const char *errorMessage, int lineNumber)
 	fprintf(stderr, "Error at line %d:%s",lineNumber, errorMessage );
 
 }
+
+/*Returns the absolute value of the instruction counter */
+unsigned int getInstructionCounter()
+{
+	return  IC + IC_STARTUP_VALUE;
+
+}
+
+/*Returns the value of the instruction counter relative to the memory beginning address*/
+unsigned int getInstructionCounterOffset()
+{
+	return IC;
+}
+
+
+unsigned int getDataCounter()
+{
+	return DC;
+
+}
+
+void resetAssemblyCounters()
+{
+	IC = 0;
+	DC = 0;
+
+}
+
+char *getInstructionMemoryWord(unsigned int index)
+{
+	return InstructionMemory[index];
+
+}
+void setInstructionMemoryWord(unsigned int index, char *value)
+{
+	InstructionMemory[index] = value;
+
+}
+
 
 
 

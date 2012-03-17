@@ -65,8 +65,20 @@ char *extractFirstGuidanceData(char *data);
 char *extractNextGuidanceData();
 char *extractGuidanceData(char *line);
 char *extractGuidanceString(char *line);
+int extractImmediateAddressingModeValue(char *operand);
+
+/*Extracts the symbol part from a valid index addressing operand */
+char *extractIndexAddressingSybol(char *operand);
+/*Extracts the offset part from a valid index addressing operand */
+char *extractIndexAddressingOffset(char *operand);
+char *extractIndex2dAddressingSybol(char *operand);
+char *extractIndex2dAddressingOffset(char *operand);
+
+
 
 int isSymbolGuidanceCommand(char *line);
+
+/*Returns a base 2 assembly word of the given base 10 value*/
 char *convertBase10toBase2(int base10);
 
 #endif

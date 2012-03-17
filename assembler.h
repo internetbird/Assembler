@@ -1,12 +1,10 @@
 #ifndef ASSEMBLER_H_
 #define ASSEMBLER_H_
 
-unsigned int IC; /* The instruction counter */
-unsigned int DC; /* The data counter */
 
 /* Assembler error messages */
 #define COMMAND_NOT_VALID "The command is not valid."
-#define SYMBOL_NOT_VALID "Symbol not vallid."
+#define SYMBOL_NOT_VALID "Symbol not valid."
 
 /* Assembler constants */
 #define IC_STARTUP_VALUE 100
@@ -15,6 +13,8 @@ unsigned int DC; /* The data counter */
 #define INSTRUCTION_MEMORY_SIZE 10000
 #define MAX_SYMBOL_LENGTH 30
 #define SYMBOL_END_CHAR ':'
+
+
 
 /* Addressing Modes */
 #define IMMEDIATE_ADDRESSING_MODE "000"
@@ -41,8 +41,20 @@ unsigned int DC; /* The data counter */
 #define EXTERN_GUIDANCE ".extern"
 
 
-int insertDataToMemory(char *line); /* Inserts a string or number data to the data memory . Returns the number of words that where inserted. */
+void insertDataToMemory(char *line); /* Inserts a string or number data to the data memory . Returns the number of words that where inserted. */
 void insertInstructionToMemory(char *word); /*Inserts a single word to the instruction memory */
 void addAssemblerError(const char *errorMessage, int lineNumber);
+void resetAssemblyCounters();
+
+/*Returns the absolute value of the instruction counter */
+unsigned int getInstructionCounter();
+/*Returns the value of the instruction counter relative to the memory beginning address*/
+unsigned int getInstructionCounterOffset();
+unsigned int getDataCounter();
+char *getInstructionMemoryWord(unsigned int index);
+void setInstructionMemoryWord(unsigned int index, char *value);
+
+
+
 
 #endif

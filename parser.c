@@ -425,6 +425,7 @@ const char *parseCommand(char *command)
 
 
 
+/*Returns a base 2 assembly word of the given base 10 value*/
 
 char *convertBase10toBase2(int base10)
 {
@@ -542,6 +543,95 @@ int sourceOperandExists(char *line)
 	return 1;
 
 }
+
+/*Extract the integer value from the immediate addressing operand */
+/*The function assumes a valid immediate addressing operand*/
+int extractImmediateAddressingModeValue(char *operand)
+{
+	/*Skip the '#' first char */
+	return atoi(operand+1);
+
+}
+
+/*Extracts the symbol part from a valid index addressing operand */
+
+char *extractIndexAddressingSybol(char *operand)
+{
+	char *symbol;
+	char *symbolStart, *symbolEnd;
+	int symbolLength;
+
+	symbolStart = operand;
+
+	/*Skip the leading spaces */
+	while(isspace(*symbolStart)) symbolStart++;
+
+	symbolEnd = strchr(operand, '[') - 1;
+
+	/*Skip trailing spaces */
+	while(isspace(*symbolEnd)) symbolEnd--;
+
+	symbolLength =  symbolEnd - symbolStart;
+
+	symbol = (char *)malloc(symbolLength + 1);
+	if(symbol == NULL) exit(1);
+
+	strncpy(symbol, operand, symbolLength + 1);
+	symbol[symbolLength] = '\0';
+
+	return symbol;
+
+}
+
+/*Extracts the offset part from a valid index addressing operand */
+
+char *extractIndexAddressingOffset(char *operand)
+{
+	char *offset;
+	char *offsetStart, *offsetEnd;
+	int offsetLength;
+
+	offsetStart = strchr(operand, '%') + 1;
+	/*Skip leading spaces */
+	while(isspace(*offsetStart)) offsetStart++;
+
+	offsetEnd = strchr(operand ,']') - 1;
+	/*Skip trailing spaces */
+	while(isspace(*offsetEnd)) offsetEnd--;
+
+	offsetLength = offsetEnd - offsetStart;
+
+	offset = (char *)malloc(offsetLength + 1);
+	if(offset == NULL) exit(1);
+
+	strncpy(offset, offsetStart, offsetLength+1);
+
+	offset[offsetLength] = '\0';
+
+	return offset;
+
+}
+char *extractIndex2dAddressingSybol(char *operand)
+{
+	/*char *symbol;
+	char *symbolStart, *symbolEnd;
+	int symbolLength;
+
+	retrun symbol;*/
+
+	return NULL;
+}
+char *extractIndex2dAddressingOffset(char *operand)
+{
+	/*char *offset;
+	char *offsetStart, *offsetEnd;
+	int offsetLength; */
+
+
+	return NULL;
+
+}
+
 
 
 
