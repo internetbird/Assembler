@@ -27,7 +27,7 @@ char *getRegisterBase2Code(char *registerName)
 {
 	int i;
 
-	for (i=0; i++; i<=NUM_OF_REGISTERS)
+	for (i=0; i<=NUM_OF_REGISTERS ;i++ )
 	{
 		if(strcmp(registers[i].name, registerName) == 0)
 		{

@@ -4,26 +4,7 @@
 #ifndef PARSER_H_
 #define PARSER_H_
 
-#define IMMEDIATE_ADDRESSING_MODE "000"
-#define DIRECT_ADDRESSING_MODE "001"
-#define INDEX_ADDRESSING_MODE "010"
-#define INDEX2D_ADDRESSING_MODE "011"
-#define REGISTER_ADDRESSING_MODE "100"
-
 #define NOT_REGISTER_OPERAND "000"
-
-
-typedef enum statement_type
-{
-	EMPTY,
-	COMMENT,
-	DATAGUIDANCE,
-	STRINGGUIDANCE,
-	ENTRYGUIDANCE,
-	EXTERNGUIDANCE,
-	COMMAND
-
-} StatementType;
 
 typedef struct
 {
@@ -36,25 +17,13 @@ typedef struct
 
 } CommandParts;
 
-/*
-
-typedef enum addressing_modes
-{
-	IMMEDIATE,
-	DIRECT,
-	INDEX,
-	INDEX2D,
-	REGISTER
-
-} AddressingMode;
-*/
 
 StatementType getStatementType(char *line);
 CommandParts parseAssemblyLine(char *line);
 
-/* Returns the base2 value of the addressing mode for the given operand*/
+/* Returns the integer value of the addressing mode for the given operand*/
 /* The function assumes a valid operand */
-char *parseAddressingMode(char *operand);
+int parseAddressingMode(char *operand);
 
 const char *parseOperand(char *operand);
 const char *parseCommand(char *command);
@@ -73,8 +42,6 @@ char *extractIndexAddressingSybol(char *operand);
 char *extractIndexAddressingOffset(char *operand);
 char *extractIndex2dAddressingSybol(char *operand);
 char *extractIndex2dAddressingOffset(char *operand);
-
-
 
 int isSymbolGuidanceCommand(char *line);
 

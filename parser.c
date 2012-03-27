@@ -79,7 +79,7 @@ CommandParts parseAssemblyLine(char *line)
 	if(isLineContainsSymbol(line))
 	{
 		parts.symbol = extractSymbolName(line);
-		line = getSubstringAfterSymbol(line);
+		line = getSubstringAfterSymbol(line); /*line is advanced to the position after the symbol*/
 
 	}
 
@@ -120,7 +120,6 @@ CommandParts parseAssemblyLine(char *line)
 	}
 
 	return parts;
-
 }
 
 CommandParts getEmptyCommandParts()
@@ -135,7 +134,6 @@ CommandParts getEmptyCommandParts()
 	parts.data = NULL;
 
 	return parts;
-
 }
 
 
@@ -145,8 +143,6 @@ CommandParts getEmptyCommandParts()
 char *getSubstringAfterSymbol(char *line)
 {
 	return strchr(line, SYMBOL_END_CHAR) + 1;
-
-
 }
 
 /*Returns a substring of the line without the command part */
@@ -167,11 +163,7 @@ char *getSubstringAfterCommand(char *line)
 
 
 	return line+i;
-
-
 }
-
-
 
 /* Extracts a symbol name from the given line     */
 /* The function assumes that the line starts with */
@@ -214,7 +206,6 @@ char *extractGuidanceData(char *line)
 	}
 
 	return guidanceData;
-
 }
 
 /*Extracts the first number string in the given data string */
@@ -228,7 +219,6 @@ char *extractFirstGuidanceData(char *data)
 char *extractNextGuidanceData()
 {
 	return strtok(NULL, ",");
-
 }
 
 char *extractGuidanceString(char *line)
@@ -271,7 +261,6 @@ char *extractSourceOperand(char *line)
 	/*Set the end of the operand string */
 	operand[operandEnd - line - i] = '\0';
 
-
 	return operand;
 
 }
@@ -302,7 +291,6 @@ char *extractDestinationOperand(char *line)
 
 	}
 
-
 	return operand;
 }
 
@@ -321,7 +309,6 @@ char *extractCommandName(char *line)
 
 	return commandName;
 
-
 }
 
 /* Checks if the line contains a symbol      */
@@ -330,62 +317,12 @@ int isLineContainsSymbol(char *line)
 {
 	return strchr(line, SYMBOL_END_CHAR) != NULL;
 
-
 }
 
-/* Checks if the line contains a symbol      */
-
-/*
-
-int isLineContainsSymbol(char *line)
-{
-	int i=1, length;
-
-	length = strlen(line);
-
-	if(isalpha(line[0]))
-	{
-		while(i < MAX_SYMBOL_NAME_SIZE &&
-			  line[i] != SYMBOL_END_CHAR)
-		{
-			if(isalpha(line[i]) || isdigit(line[i]))
-			{
-				i++;
-
-			} else
-			{
-				return 0;
-			}
-		}
-
-		if(i < MAX_SYMBOL_NAME_SIZE)
-		{
-			return 1;
-
-		} else
-		{
-			return 0;
-		}
-
-	} else
-	{
-		return 0;
-
-	}
-
-}
-
-*/
-
-
-
-
-
-
-/* Returns the base2 value of the addressing mode for the given operand*/
+/* Returns the integer value of the addressing mode for the given operand*/
 /* The function assumes a valid operand */
 
-char *parseAddressingMode(char *operand)
+int parseAddressingMode(char *operand)
 {
 	if(isRegister(operand))
 	{
@@ -417,12 +354,12 @@ const char *parseOperand(char *operand)
 	else return NOT_REGISTER_OPERAND;
 
 }
+
 const char *parseCommand(char *command)
 {
 	return getCommandBase2Code(command);
 
 }
-
 
 
 /*Returns a base 2 assembly word of the given base 10 value*/

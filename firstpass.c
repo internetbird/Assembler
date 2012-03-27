@@ -20,10 +20,9 @@ int executeFirstPass(FILE *assemblyFile)
 	StatementType type;
 	CommandParts parts;
 
-
 	resetAssemblyCounters();
 
-	while(fgets(line,100, assemblyFile) != NULL )
+	while(fgets(line,MAX_LINE_LENGTH, assemblyFile) != NULL )
 	{
 		 type =  getStatementType(line);
 
@@ -175,8 +174,6 @@ int executeFirstPass(FILE *assemblyFile)
 						{
 							insertInstructionToMemory(operandWord2);
 						}
-
-
 
 					}
 
