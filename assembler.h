@@ -14,6 +14,7 @@
 #define MAX_SYMBOL_LENGTH 30
 #define SYMBOL_END_CHAR ':'
 #define MAX_LINE_LENGTH 80
+#define ASSEMBLY_FILE_EXT ".as"
 
 /* Addressing Modes */
 #define IMMEDIATE_ADDRESSING_MODE 0

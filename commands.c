@@ -5,12 +5,16 @@
 
 #define NUM_OF_COMMANDS 16
 
+#define ADR_MODE_IMD_BITS "000"
+#define ADR_MODE_DIRECT_BITS "001"
+#define ADR_MODE_INDEX_BITS "010"
+#define ADR_MODE_INDEX2D_BITS "011"
+#define ADR_MODE_REGISTER_BITS "100"
+
 #define ALL_ADR_MODES ADR_MODE_IMD_FLAG | ADR_MODE_DIRECT_FLAG | ADR_MODE_INDEX_FLAG | ADR_MODE_INDEX2D_FLAG | ADR_MODE_REGISTER_FLAG
 #define ADR_MODES_1_TO_4 ADR_MODE_DIRECT_FLAG | ADR_MODE_INDEX_FLAG | ADR_MODE_INDEX2D_FLAG | ADR_MODE_REGISTER_FLAG
 
-
 /* Definition of all the assembly command names, base2 values and allowed addressing modes */
-
 
 Command commands[NUM_OF_COMMANDS] = {
 
@@ -129,6 +133,44 @@ short convertToAddressingModeFlag(short adderssingMode)
 
 	return flag;
 }
+
+/*Converts the addressing mode integer value to the binary string */
+char *getAddressingModeBits(int addressingMode)
+{
+	char *bits;
+
+	switch(addressingMode)
+	{
+		case IMMEDIATE_ADDRESSING_MODE:
+			bits = ADR_MODE_IMD_BITS;
+			break;
+
+		case DIRECT_ADDRESSING_MODE:
+			bits = ADR_MODE_DIRECT_BITS;
+			break;
+
+		case INDEX_ADDRESSING_MODE:
+			bits = ADR_MODE_INDEX_BITS;
+			break;
+
+		case INDEX2D_ADDRESSING_MODE:
+			bits = ADR_MODE_INDEX2D_BITS;
+			break;
+
+		case REGISTER_ADDRESSING_MODE:
+			bits = ADR_MODE_REGISTER_BITS;
+			break;
+
+		default:
+			break;
+
+	}
+
+	return bits;
+
+
+}
+
 
 
 

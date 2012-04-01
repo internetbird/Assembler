@@ -39,4 +39,7 @@ Command getCommandByCommandName(char *command_name);
 /*Converts an addressing mode number to the addressing mode flag*/
 short convertToAddressingModeFlag(short adderssingMode);
 
+/*Converts the addressing mode integer value to the binary string */
+char *getAddressingModeBits(int addressingMode);
+
 #endif

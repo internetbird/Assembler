@@ -9,6 +9,10 @@
 unsigned int IC; /* The instruction counter */
 unsigned int DC; /* The data counter */
 
+#define NO_ASSEMBER_ARGUMENTS_ERROR "No assembly files supplied. Usage is: Assembler [file1] [file2] ..."
+#define FILE_NAME_NOT_VALID "Assembly file:%s is not valid"
+#define FIRST_PASS_FAILED "Executing first pass on file:%s failed. Terminating assembler execution."
+#define SECOND_PASS_FAILED "Executing second pass on file:%s failed. Terminating assembler execution."
 
 char *DataMemory[DATA_MEMORY_SIZE];
 char *InstructionMemory[INSTRUCTION_MEMORY_SIZE];
@@ -18,13 +22,28 @@ void insertIntToDataMemory(int value);
 int main(int argc, char *argv[])
 {
 	FILE *file;
+	char *assemblyFileName;
+	int i;
 
-	if((file = fopen(argv[1], "r")) != NULL)
+	if(argc < 2) fprintf(stderr, NO_ASSEMBER_ARGUMENTS_ERROR);
+
+	for(i = 1; i<argc ; i++) /*Iterate over all the assembly files */
 	{
-		if(executeFirstPass(file) != 0)
+		assemblyFileName = strcat(argv[i], ASSEMBLY_FILE_EXT);
+
+		if((file = fopen(assemblyFileName, "r")) != NULL)
 		{
-		   printf("Terminating assembler execution...\n");
-		   return 1;
+			if(!executeFirstPass(file))
+			{
+			   printf("Terminating assembler execution...\n");
+			   exit(1);
+			}
+
+
+		} else
+		{
+			fprintf(stderr, FILE_NAME_NOT_VALID, assemblyFileName);
+			exit(1);
 		}
 	}
 	return 0;

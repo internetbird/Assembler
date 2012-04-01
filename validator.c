@@ -12,6 +12,8 @@
 #define NO__GUIDANCE_STRING "There is no guidance string."
 #define COMMAND_DOES_NOT_SUPPORT_OPERAND "The command does not support this operand."
 #define ADDRESSING_MODE_NOT_ALLOWED "The addressing mode is not allowed."
+#define NOT_A_VALID_COMMAND_NAME "The command name is not valid."
+#define COMMAND_REQUIRES_OPERAND "The command requires an operand."
 
 int isValidSymbol(char *symbol);
 int isValidIntegetList(char *list);
@@ -43,7 +45,6 @@ char *validateAssemblyLine(char *line)
 
 	CommandParts parts; /* Unfilled fields must be NULL in order for the function to work */
 
-	char *string = (char*)malloc(sizeof(char)*MAX_SYMBOL_LENGTH);
 	char *validationResult = NULL;
 
 	parts = parseAssemblyLine(line);
@@ -79,9 +80,15 @@ char *validateAssemblyLine(char *line)
 			}
 			else /* A valid command name */
 			{
-
-				validarionResult = validateCommandOperands(parts);
+				validationResult = validateCommandOperands(parts);
 			}
+
+			break;
+
+		case COMMENT:
+		default:
+			break;
+
 
 		}
 
@@ -90,14 +97,18 @@ char *validateAssemblyLine(char *line)
 }
 
 
+/*Checks if the given string is a valid symbol */
 
 int isValidSymbol(char *symbol)
 {
 	int i=1, length;
 
 	length = strlen(symbol);
+
 	if (isRegister(symbol)) return 0; /*symbol cannot be a register*/
-	if (isValidCommand(symbol)) return 0; /* symbol cannot be a command*/
+
+	if (isValidCommandName(symbol)) return 0; /* symbol cannot be a command*/
+
 	if(length > MAX_SYMBOL_LENGTH) return 0;
 
 	if(isalpha(symbol[0]))
@@ -131,7 +142,7 @@ int isValidIntegetList(char *list)
 
 	if(list == NULL) return 0;
 
-	if ((currData = extractFirstGuidanceData(line)) != NULL)
+	if ((currData = extractFirstGuidanceData(list)) != NULL)
 	{
 		if (isInteger(currData))
 		{
@@ -176,7 +187,7 @@ int isValidCommandName(char *commandName)
 
 	command = getCommandByCommandName(commandName);
 
-	return commad.Name != NULL;
+	return command.name != NULL;
 }
 
 char *validateExternGuidance(CommandParts parts)
@@ -209,7 +220,7 @@ char *validateDataGuidance(CommandParts parts)
 {
 	char *result = NULL;
 
-	if(!isValidIntegetList(extractGuidanceData(line)))
+	if(!isValidIntegetList(extractGuidanceData(parts.data)))
 	{
 		result = DATA_NOT_AN_INTEGER;
 
@@ -223,7 +234,7 @@ char *validateStringGuidance(CommandParts parts)
 {
 	char *result = NULL;
 
-	if(extractGuidanceString(line) == NULL)
+	if(extractGuidanceString(parts.data) == NULL)
 	{
 		result = NO__GUIDANCE_STRING;
 	}

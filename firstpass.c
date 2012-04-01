@@ -13,10 +13,10 @@ char *getEmptyInstructionWord();
 int executeFirstPass(FILE *assemblyFile)
 {
 
-	int lineNum = 1, val;
+	int lineNum = 1, val, addressingMode;
 	int lineContainsSymbol = 0;
 	char line[100], *instructionWord, *operandWord1, *operandWord2;
-	char *validationMsg, *commandBase2Code, *addressingMode;
+	char *validationMsg, *commandBase2Code;
 	StatementType type;
 	CommandParts parts;
 
@@ -30,7 +30,7 @@ int executeFirstPass(FILE *assemblyFile)
 		 {
 
 			/*First we validate the line */
-			if((validationMsg = validateCommandLine(line)) == NULL)
+			if((validationMsg = validateAssemblyLine(line)) == NULL)
 			{
 				    /*Separate the line to its parts*/
 				    parts = parseAssemblyLine(line);
@@ -85,33 +85,33 @@ int executeFirstPass(FILE *assemblyFile)
 
 							/*Copy the source operand addressing mode bits to the instruction word*/
 							strncpy(instructionWord + SOURCE_ADDRESING_MODE_OFFSET,
-									addressingMode ,
+									getAddressingModeBits(addressingMode) ,
 									ADDRESSING_MODE_BITS_LENGTH);
 
 							/*If it's a register addressing mode, copy the source register bits to the instruction word*/
-							if(strcmp(addressingMode, REGISTER_ADDRESSING_MODE) == 0)
+							if(addressingMode == REGISTER_ADDRESSING_MODE)
 							{
 								strncpy(instructionWord + SOURCE_REGISTER_OFFSET,
 										getRegisterBase2Code(parts.sourceOperand),
 										REGISTER_BITS_LENGTH);
 
 							/*If it's an immediate addressing mode, copy the value of the operand to the first operand word*/
-							} else if(strcmp(addressingMode, IMMEDIATE_ADDRESSING_MODE) == 0)
+							} else if(addressingMode == IMMEDIATE_ADDRESSING_MODE)
 							{
 								val = extractImmediateAddressingModeValue(parts.sourceOperand);
 								operandWord1 = convertBase10toBase2(val);
 
 							/*If it's a direct addressing mode, copy the value of the operand to the first operand word*/
-							} else if(strcmp(addressingMode, DIRECT_ADDRESSING_MODE) == 0)
+							} else if(addressingMode == DIRECT_ADDRESSING_MODE)
 							{
 								operandWord1 = parts.sourceOperand;
 
 
-							} else if(strcmp(addressingMode, INDEX_ADDRESSING_MODE) == 0)
+							} else if(addressingMode == INDEX_ADDRESSING_MODE)
 							{
 								operandWord1 = extractIndexAddressingSybol(parts.sourceOperand);
 
-							} else if(strcmp(addressingMode, INDEX2D_ADDRESSING_MODE) == 0)
+							} else if(addressingMode == INDEX2D_ADDRESSING_MODE)
 							{
 								operandWord1 = NULL;
 
@@ -125,11 +125,11 @@ int executeFirstPass(FILE *assemblyFile)
 
 							/*Copy the destination operand addressing mode bits to the instruction word*/
 							strncpy(instructionWord + DESTINATION_ADDRESING_MODE_OFFSET,
-																addressingMode ,
+												getAddressingModeBits(addressingMode) ,
 																ADDRESSING_MODE_BITS_LENGTH);
 
 							/*If it's a register addressing mode, copy the destination register bits to the instruction word*/
-							if(strcmp(addressingMode, REGISTER_ADDRESSING_MODE) == 0)
+							if(addressingMode == REGISTER_ADDRESSING_MODE)
 							{
 								strncpy(instructionWord + DESTINATION_REGISTER_OFFSET,
 										getRegisterBase2Code(parts.destinationOperand),
@@ -137,30 +137,29 @@ int executeFirstPass(FILE *assemblyFile)
 							}
 
 							/*If it's an immediate addressing mode, copy the value of the operand to the first operand word*/
-							} else if(strcmp(addressingMode, IMMEDIATE_ADDRESSING_MODE) == 0)
+							} else if(addressingMode == IMMEDIATE_ADDRESSING_MODE)
 							{
 								val = extractImmediateAddressingModeValue(parts.destinationOperand);
 								operandWord1 = convertBase10toBase2(val);
 
 							/*If it's a direct addressing mode, copy the value of the operand to the first operand word*/
-							} else if(strcmp(addressingMode, DIRECT_ADDRESSING_MODE) == 0)
+							} else if(addressingMode == DIRECT_ADDRESSING_MODE)
 							{
 								operandWord1 = parts.destinationOperand;
 
 
-							} else if(strcmp(addressingMode, INDEX_ADDRESSING_MODE) == 0)
+							} else if(addressingMode == INDEX_ADDRESSING_MODE)
 							{
 								operandWord1 = extractIndexAddressingSybol(parts.destinationOperand);
 								operandWord2 = extractIndexAddressingOffset(parts.destinationOperand);
 
-							} else if(strcmp(addressingMode, INDEX2D_ADDRESSING_MODE) == 0)
+							} else if(addressingMode == INDEX2D_ADDRESSING_MODE)
 							{
 								operandWord1 = extractIndex2dAddressingSybol(parts.destinationOperand);
 								operandWord2 = extractIndex2dAddressingOffset(parts.destinationOperand);
 
 							}
 						}
-
 
 						insertInstructionToMemory(instructionWord);
 
