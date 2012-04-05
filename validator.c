@@ -8,6 +8,10 @@
 #include "symbols.h"
 #include "commands.h"
 
+#define HASH_KEY '#'
+#define HASH_STRING "#"
+#define INDEX_ADDRESSING_STRING "[%]"
+#define INDEX2D_ADDRESSING_STRING "[]"
 #define DATA_NOT_AN_INTEGER "One of the data parameters is not an integer."
 #define NO__GUIDANCE_STRING "There is no guidance string."
 #define COMMAND_DOES_NOT_SUPPORT_OPERAND "The command does not support this operand."
@@ -334,35 +338,75 @@ char *validateAddressingMode(int addressingMode, char *operand)
 
 char *validateImmediateAddressingMode(char *operand)
 {
+	char *tmp = strdup(operand);
 	char *result = NULL;
 
-	/*TODO: complete this method */
+	if ((strchr(tmp,HASH_KEY))!= NULL)
+	{
+		strtok(tmp,HASH_STRING);
+		if (isInteger(tmp) == 0)
+		result = ADDRESSING_MODE_NOT_ALLOWED;
+	}
+	else
+	{
+		result = ADDRESSING_MODE_NOT_ALLOWED;
+	}
 
 	return result;
 }
 char *validateDirectAddressingMode(char *operand)
 {
-	char *result = NULL;
+    char *result = NULL;
 
-	/*TODO: complete this method */
+	if (isValidSymbol(operand)== 0)
+	{
+		result = ADDRESSING_MODE_NOT_ALLOWED;
+	}
 
 	return result;
-
 }
+
+
 char *validateIndexAddressingMode(char *operand)
 {
-	char *result = NULL;
+  char *result = NULL;
+  char *temp = strdup(operand);
 
-	/*TODO: complete this method */
+  strtok(temp, INDEX_ADDRESSING_STRING);
 
-	return result;
+  if (isValidSymbol(temp))
+  {
+	strtok(NULL,INDEX2D_ADDRESSING_STRING);
+	if (temp != NULL && isValidSymbol(operand)==0)
+	{
+		result = ADDRESSING_MODE_NOT_ALLOWED;
+	}
+  } else
+  {
+	  result = ADDRESSING_MODE_NOT_ALLOWED;
+  }
+
+  return result;
 
 }
 char *validateIndex2dAddressingMode(char *operand)
 {
 	char *result = NULL;
+	char *temp = strdup(operand);
+	strtok(temp,INDEX2D_ADDRESSING_STRING);
+	if (temp != NULL && isValidSymbol(temp)!=0)
+	{
+		if(strtok(NULL,INDEX2D_ADDRESSING_STRING) !=NULL && isValidSymbol(temp) !=0)
+		{
+			if(strtok(NULL,INDEX2D_ADDRESSING_STRING) == NULL || isRegister(temp)==0)
+			{
+				result = ADDRESSING_MODE_NOT_ALLOWED;
+			}
 
-	/*TODO: complete this method */
+		} else result = ADDRESSING_MODE_NOT_ALLOWED;
+
+	}
+	else result = ADDRESSING_MODE_NOT_ALLOWED;
 
 	return result;
 
@@ -371,7 +415,10 @@ char *validateRegisterAddressingMode(char *operand)
 {
 	char *result = NULL;
 
-	/*TODO: complete this method */
+	if (!isRegister(operand))
+	{
+		result = ADDRESSING_MODE_NOT_ALLOWED;
+	}
 
 	return result;
 }

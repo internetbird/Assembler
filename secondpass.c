@@ -13,17 +13,18 @@
 
 char * word;
 
-void executeSecondPass(FILE *assemblyFile)
+/*Executes the second pass - replacing all the sybols with their correct values */
+int executeSecondPass()
 {
 
-	int i = 0;
+	int i = 0, noErrorsFound = 1;
 	unsigned int instructionMemoryLength;
 	char *currInstructionWord ;
 	Symbol *currSymbol;
 
 	instructionMemoryLength = getInstructionCounterOffset();
 
-	while(i < instructionMemoryLength )
+	while(i < instructionMemoryLength && noErrorsFound)
 	{
 
 		currInstructionWord = getInstructionMemoryWord(i);
@@ -40,6 +41,7 @@ void executeSecondPass(FILE *assemblyFile)
 			{
 
 				addAssemblerError(SYMBOL_NOT_VALID, i);
+				noErrorsFound = 0;
 
 			}
 		}
@@ -50,11 +52,18 @@ void executeSecondPass(FILE *assemblyFile)
 			{
 				currSymbol = getSymbol(word);
 				setInstructionMemoryWord(i, convertBase10toBase2(currSymbol->value-(i+1)*IC_STARTUP_VALUE));
+			} else
+			{
+				addAssemblerError(SYMBOL_NOT_VALID, i);
+				noErrorsFound = 0;
+
 			}
 		}
 
 		i++;
 	}
+
+	return noErrorsFound;
 }
 
 

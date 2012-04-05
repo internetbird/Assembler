@@ -6,6 +6,7 @@
 #define OFFSET_MARK_LABEL '*'
 #define OFFSET_MARK_STRING "*"
 
-void executeSecondPass();
+/*Executes the second pass - replacing all the sybols with their correct values */
+int executeSecondPass();
 
 #endif

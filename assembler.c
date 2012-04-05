@@ -5,6 +5,7 @@
 #include "firstpass.h"
 #include "secondpass.h"
 #include "assembler.h"
+#include "output.h"
 
 unsigned int IC; /* The instruction counter */
 unsigned int DC; /* The data counter */
@@ -35,9 +36,19 @@ int main(int argc, char *argv[])
 		{
 			if(!executeFirstPass(file))
 			{
-			   printf("Terminating assembler execution...\n");
+			   printf(FIRST_PASS_FAILED, assemblyFileName);
 			   exit(1);
 			}
+
+			if(!executeSecondPass())
+			{
+				printf(SECOND_PASS_FAILED, assemblyFileName);
+				exit(1);
+			}
+
+			writeObjFile(argv[i], InstructionMemory);
+			writeExtFile(argv[i], DataMemory);
+			writeEntFile(argv[i], DataMemory);
 
 
 		} else
