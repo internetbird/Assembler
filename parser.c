@@ -27,6 +27,7 @@ char *getSubstringAfterSymbol(char *line);
 char *getSubstringAfterCommand(char *line);
 void convertTo2sComplement(char base2Positive[]);
 int sourceOperandExists(char *line);
+int isEmptyLine(char *line);
 
 
 /* Returns the type of assembly statement         */
@@ -35,9 +36,7 @@ int sourceOperandExists(char *line);
 StatementType getStatementType(char *line)
 {
 
-	char *test = NULL;
-
-	if(sscanf(line, "%s", test) == 0) /* No non white characters */
+	if(isEmptyLine(line))
 	{
 		return EMPTY;
 
@@ -253,10 +252,10 @@ char *extractSourceOperand(char *line)
 	/*Find the end of the source operand*/
 	operandEnd =  strchr(line, ',');
 
-	operand = (char *)malloc(operandEnd- line -i);
+	operand = (char *)malloc(operandEnd - line -i + 1);
 	if(operand == NULL) return NULL;
 
-	strncpy(operand, line+i, operandEnd - line - i - 1);
+	strncpy(operand, line+i, operandEnd - line - i);
 
 	/*Set the end of the operand string */
 	operand[operandEnd - line - i] = '\0';
@@ -569,6 +568,24 @@ char *extractIndex2dAddressingOffset(char *operand)
 
 }
 
+int isEmptyLine(char *line)
+{
+	int empty = 1;
+
+	while( (*line) != '\n' && (*line) != EOF)
+	{
+		if(!isspace(*line))
+		{
+			empty = 0;
+			break;
+		}
+
+		line++;
+
+	}
+
+	return empty;
+}
 
 
 

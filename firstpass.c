@@ -28,10 +28,10 @@ int executeFirstPass(FILE *assemblyFile)
 
 		 if(type != EMPTY && type != COMMENT)
 		 {
-
 			/*First we validate the line */
 			if((validationMsg = validateAssemblyLine(line)) == NULL)
 			{
+
 				    /*Separate the line to its parts*/
 				    parts = parseAssemblyLine(line);
 
@@ -174,20 +174,18 @@ int executeFirstPass(FILE *assemblyFile)
 							insertInstructionToMemory(operandWord2);
 						}
 
+					} else /*A validation error */
+					{
+						addAssemblerError(validationMsg,lineNum);
+						return 0;
 					}
 
-					lineNum++;
-
-
-			} else /*A validation error */
-			{
-				addAssemblerError(validationMsg,lineNum);
-				return 1;
 			}
+
+		 	 lineNum++;
 		 }
 
-
-	return 0;
+	return 1;
 }
 
 char *getEmptyInstructionWord()

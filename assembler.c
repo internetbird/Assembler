@@ -10,10 +10,10 @@
 unsigned int IC; /* The instruction counter */
 unsigned int DC; /* The data counter */
 
-#define NO_ASSEMBER_ARGUMENTS_ERROR "No assembly files supplied. Usage is: Assembler [file1] [file2] ..."
-#define FILE_NAME_NOT_VALID "Assembly file:%s is not valid"
-#define FIRST_PASS_FAILED "Executing first pass on file:%s failed. Terminating assembler execution."
-#define SECOND_PASS_FAILED "Executing second pass on file:%s failed. Terminating assembler execution."
+#define NO_ASSEMBER_ARGUMENTS_ERROR "No assembly files supplied. Usage is: Assembler [file1] [file2] ...\n"
+#define FILE_NAME_NOT_VALID "Assembly file:%s is not valid\n"
+#define FIRST_PASS_FAILED "Executing first pass on file:%s failed.\n Terminating assembler execution.\n"
+#define SECOND_PASS_FAILED "Executing second pass on file:%s failed.\n Terminating assembler execution.\n"
 
 char *DataMemory[DATA_MEMORY_SIZE];
 char *InstructionMemory[INSTRUCTION_MEMORY_SIZE];
@@ -102,7 +102,6 @@ void insertDataToMemory(char *line)
 		insertIntToDataMemory(0);
 		insertedWords++;
 
-
 	}
 
 	DC = DC + insertedWords;
@@ -111,8 +110,10 @@ void insertDataToMemory(char *line)
 
 void insertInstructionToMemory(char *word)
 {
+
 	InstructionMemory[IC] = word;
 	IC++;
+	printf("Inserted word '%s' to IC:%d", word, IC);
 
 }
 
@@ -132,8 +133,7 @@ void insertIntToDataMemory(int value)
 void addAssemblerError(const char *errorMessage, int lineNumber)
 {
 
-	fprintf(stderr, "Error at line %d:%s",lineNumber, errorMessage );
-
+	fprintf(stderr, "Error at line %d:%s\n",lineNumber, errorMessage );
 }
 
 /*Returns the absolute value of the instruction counter */
