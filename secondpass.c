@@ -13,7 +13,7 @@
 
 char * word;
 
-/*Executes the second pass - replacing all the sybols with their correct values */
+/*Executes the second pass - replacing all the symbols with their correct values */
 int executeSecondPass()
 {
 
@@ -22,7 +22,7 @@ int executeSecondPass()
 	char *currInstructionWord ;
 	Symbol *currSymbol;
 
-	instructionMemoryLength = getInstructionCounterOffset();
+	instructionMemoryLength = getInstructionCounter();
 
 	while(i < instructionMemoryLength && noErrorsFound)
 	{
@@ -35,7 +35,12 @@ int executeSecondPass()
 			if(isSymbolExists(currInstructionWord))
 			{
 				currSymbol = getSymbol(currInstructionWord);
-				setInstructionMemoryWord(i, convertBase10toBase2(currSymbol->value));
+				setInstructionMemoryWord(i, convertBase10toBase2(currSymbol->value), LINKER_ABSOLUTE);
+
+			} else if(isExternSymbolExists(currInstructionWord)) /*If it's an external symbol set zero word*/
+			{
+				setInstructionMemoryWord(i, convertBase10toBase2(0), LINKER_EXTERNAL);
+				insertExternSymbolValue(currInstructionWord , i + IC_STARTUP_VALUE);
 
 			} else /*Report symbol not found error */
 			{
@@ -51,7 +56,7 @@ int executeSecondPass()
 			if(isSymbolExists(word))
 			{
 				currSymbol = getSymbol(word);
-				setInstructionMemoryWord(i, convertBase10toBase2(currSymbol->value-(i+1)*IC_STARTUP_VALUE));
+				setInstructionMemoryWord(i, convertBase10toBase2(currSymbol->value- getInstructionCounter() + IC_STARTUP_VALUE), LINKER_RELOCATABLE);
 			} else
 			{
 				addAssemblerError(SYMBOL_NOT_VALID, i);

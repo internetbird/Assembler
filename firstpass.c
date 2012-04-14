@@ -13,14 +13,16 @@ char *getEmptyInstructionWord();
 int executeFirstPass(FILE *assemblyFile)
 {
 
-	int lineNum = 1, val, addressingMode;
-	int lineContainsSymbol = 0;
+	int lineNum = 1, val, addressingMode, operand2IsOffset;
+	int lineContainsSymbol = 0, success = 1;
 	char line[100], *instructionWord, *operandWord1, *operandWord2;
 	char *validationMsg, *commandBase2Code;
+	char *operand1LinkerChar, *temp;
 	StatementType type;
 	CommandParts parts;
 
 	resetAssemblyCounters();
+	initSymboTables();
 
 	while(fgets(line,MAX_LINE_LENGTH, assemblyFile) != NULL )
 	{
@@ -38,6 +40,7 @@ int executeFirstPass(FILE *assemblyFile)
 					/* Set a flag that determines if there is a symbol in the currently processed line*/
 					lineContainsSymbol = (parts.symbol != NULL);
 
+
 					/*If it's a data guidance command, insert the data to the data memory and symbol(if exists) */
 					if(type == DATAGUIDANCE || type == STRINGGUIDANCE)
 					{
@@ -50,16 +53,19 @@ int executeFirstPass(FILE *assemblyFile)
 
 
 					/*If it's an .extern symbol guidance line insert it to the external symbols list. */
-					} else if(type == ENTRYGUIDANCE || type == EXTERNGUIDANCE)
+					} else if(type == EXTERNGUIDANCE)
 					{
-						if(type == EXTERNGUIDANCE)
-						{
-							insertExternSymbol(parts.externSymbol);
-						}
 
+						insertExternSymbolName(parts.externSymbol);
 
+					} else if(type == ENTRYGUIDANCE)
+					{
+
+						insertEntrySymbol(parts.entrySymbol);
+
+					}
 					/* It's a command. Insert a command symbol(if exists) and the command to the instruction memory */
-					} else
+					else
 					{
 						if(lineContainsSymbol)
 						{
@@ -70,7 +76,9 @@ int executeFirstPass(FILE *assemblyFile)
 						instructionWord = getEmptyInstructionWord();
 						operandWord1 = NULL;
 						operandWord2 = NULL;
-
+						operand1LinkerChar = NULL;
+						temp = NULL;
+						operand2IsOffset = 0;
 
 						/*Get the command base2 code */
 						commandBase2Code = getCommandBase2Code(parts.command);
@@ -98,8 +106,9 @@ int executeFirstPass(FILE *assemblyFile)
 							/*If it's an immediate addressing mode, copy the value of the operand to the first operand word*/
 							} else if(addressingMode == IMMEDIATE_ADDRESSING_MODE)
 							{
-								val = extractImmediateAddressingModeValue(parts.sourceOperand);
+								val = atoi(extractImmediateAddressingModeValue(parts.sourceOperand));
 								operandWord1 = convertBase10toBase2(val);
+								operand1LinkerChar = LINKER_ABSOLUTE;
 
 							/*If it's a direct addressing mode, copy the value of the operand to the first operand word*/
 							} else if(addressingMode == DIRECT_ADDRESSING_MODE)
@@ -109,11 +118,14 @@ int executeFirstPass(FILE *assemblyFile)
 
 							} else if(addressingMode == INDEX_ADDRESSING_MODE)
 							{
-								operandWord1 = extractIndexAddressingSybol(parts.sourceOperand);
+								operandWord1 = extractIndexAddressingSymbol(parts.sourceOperand);
+								operandWord2 = extractIndexAddressingOffset(parts.sourceOperand);
+								operand2IsOffset = 1;
 
 							} else if(addressingMode == INDEX2D_ADDRESSING_MODE)
 							{
-								operandWord1 = NULL;
+								operandWord1 = extractIndex2dAddressingSymbol(parts.sourceOperand);
+								operandWord2 = extractIndex2dAddressingOffset(parts.sourceOperand);
 
 							}
 
@@ -135,12 +147,12 @@ int executeFirstPass(FILE *assemblyFile)
 										getRegisterBase2Code(parts.destinationOperand),
 										REGISTER_BITS_LENGTH);
 							}
-
 							/*If it's an immediate addressing mode, copy the value of the operand to the first operand word*/
-							} else if(addressingMode == IMMEDIATE_ADDRESSING_MODE)
+							else if(addressingMode == IMMEDIATE_ADDRESSING_MODE)
 							{
-								val = extractImmediateAddressingModeValue(parts.destinationOperand);
+								val = atoi(extractImmediateAddressingModeValue(parts.destinationOperand));
 								operandWord1 = convertBase10toBase2(val);
+								operand1LinkerChar = LINKER_ABSOLUTE;
 
 							/*If it's a direct addressing mode, copy the value of the operand to the first operand word*/
 							} else if(addressingMode == DIRECT_ADDRESSING_MODE)
@@ -150,34 +162,47 @@ int executeFirstPass(FILE *assemblyFile)
 
 							} else if(addressingMode == INDEX_ADDRESSING_MODE)
 							{
-								operandWord1 = extractIndexAddressingSybol(parts.destinationOperand);
+								operandWord1 = extractIndexAddressingSymbol(parts.destinationOperand);
 								operandWord2 = extractIndexAddressingOffset(parts.destinationOperand);
+								operand2IsOffset = 1;
 
 							} else if(addressingMode == INDEX2D_ADDRESSING_MODE)
 							{
-								operandWord1 = extractIndex2dAddressingSybol(parts.destinationOperand);
+								operandWord1 = extractIndex2dAddressingSymbol(parts.destinationOperand);
 								operandWord2 = extractIndex2dAddressingOffset(parts.destinationOperand);
 
 							}
 						}
 
-						insertInstructionToMemory(instructionWord);
+						insertInstructionToMemory(instructionWord, LINKER_ABSOLUTE);
 
 						/* Insert the additional words if needed*/
 						if(operandWord1 != NULL)
 						{
-							insertInstructionToMemory(operandWord1);
+							insertInstructionToMemory(operandWord1, operand1LinkerChar);
 						}
 
 						if(operandWord2 != NULL)
 						{
-							insertInstructionToMemory(operandWord2);
+							if(operand2IsOffset) /*Add the symbol offset mark*/
+							{
+								temp = (char*)malloc(2);
+								if(temp == NULL) exit(1);
+
+								strcpy(temp,OFFSET_MARK_STRING);
+								operandWord2 = strcat(temp, operandWord2);
+							}
+
+							insertInstructionToMemory(operandWord2, NULL);
 						}
 
-					} else /*A validation error */
+						}
+					}
+
+					else /*A validation error */
 					{
 						addAssemblerError(validationMsg,lineNum);
-						return 0;
+						success = 0;
 					}
 
 			}
@@ -185,7 +210,7 @@ int executeFirstPass(FILE *assemblyFile)
 		 	 lineNum++;
 		 }
 
-	return 1;
+	return success;
 }
 
 char *getEmptyInstructionWord()

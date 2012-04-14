@@ -12,12 +12,17 @@
 #include "commands.h"
 #include "assembler.h"
 
+/*string values of the '"' char */
+#define DOUBLE_QUOTES_START "\342\200\234"
+#define DOUBLE_QUOTES_END "\342\200\235"
+
 
 /* Extracts a symbol name from the given line     */
 /* The function assumes that the line starts with */
 /* a valid symbol.                                */
 char *extractSymbolName(char *line);
 char *extractExternSymbolName(char *line);
+char *extractEntrySymbolName(char *line);
 char *extractCommandName(char *line);
 char *extractSourceOperand(char *line);
 char *extractDestinationOperand(char *line);
@@ -26,7 +31,6 @@ int isLineContainsSymbol(char *line);
 char *getSubstringAfterSymbol(char *line);
 char *getSubstringAfterCommand(char *line);
 void convertTo2sComplement(char base2Positive[]);
-int sourceOperandExists(char *line);
 int isEmptyLine(char *line);
 
 
@@ -89,21 +93,21 @@ CommandParts parseAssemblyLine(char *line)
 		case COMMAND:
 			parts.command = extractCommandName(line);
 			line = getSubstringAfterCommand(line);
-			if(line != NULL) /*There are operands*/
-				{
-					if(sourceOperandExists(line))
-					{
-						parts.sourceOperand = extractSourceOperand(line);
-					}
 
-					parts.destinationOperand = extractDestinationOperand(line);
-
-				}
+			if(line != NULL && (*line != '\n') && (*line != '\0') && (*line != EOF)) /*There are operands*/
+			{
+				parts.sourceOperand = extractSourceOperand(line);
+				parts.destinationOperand = extractDestinationOperand(line);
+			}
 
 			break;
 
 		case EXTERNGUIDANCE:
 			parts.externSymbol = extractExternSymbolName(line);
+			break;
+
+		case ENTRYGUIDANCE:
+			parts.entrySymbol = extractEntrySymbolName(line);
 			break;
 
 		case DATAGUIDANCE:
@@ -130,6 +134,7 @@ CommandParts getEmptyCommandParts()
 	parts.sourceOperand = NULL;
 	parts.destinationOperand = NULL;
 	parts.externSymbol = NULL;
+	parts.entrySymbol = NULL;
 	parts.data = NULL;
 
 	return parts;
@@ -194,7 +199,7 @@ char *extractGuidanceData(char *line)
 {
 	char *guidanceData;
 
-	guidanceData = strstr(line, DATA_GUIDANCE);
+	guidanceData = strstr(line, DATA_GUIDANCE) + strlen(DATA_GUIDANCE);
 
 	/* Skip all characters until we reach a number */
 	while((*guidanceData) != '+' &&
@@ -224,13 +229,13 @@ char *extractGuidanceString(char *line)
 {
 	char *guidanceString, *stringStart, *stringEnd;
 
-	stringStart = strchr(line, '"');
-	stringEnd = strrchr(line, '"');
+	stringStart = strstr(line, DOUBLE_QUOTES_START) + 3; /*Double quotes is 3 characters long*/
+	stringEnd = strstr(line, DOUBLE_QUOTES_END);
 
 	guidanceString = (char *)malloc(stringEnd-stringStart);
 	if(guidanceString == NULL) return NULL;
 
-	strncpy(guidanceString, stringStart+1, stringEnd - stringStart - 1);
+	strncpy(guidanceString, stringStart, stringEnd - stringStart);
 
 	/*Add 0 to the end of the string */
 	guidanceString[stringEnd - stringStart] = '\0';
@@ -366,7 +371,7 @@ const char *parseCommand(char *command)
 char *convertBase10toBase2(int base10)
 {
 	char *base2Word, temp;
-	int i, isNegative;
+	int i, isNegative = 0;
 
 	base2Word = (char *)malloc(WORD_SIZE+1);
 
@@ -383,7 +388,7 @@ char *convertBase10toBase2(int base10)
 
 	for(i=0; i<WORD_SIZE; i++)
 	{
-		if(i%2 == 0)
+		if(base10%2 == 0)
 		{
 			base2Word[i] = '0';
 		} else
@@ -391,7 +396,7 @@ char *convertBase10toBase2(int base10)
 		    base2Word[i] = '1';
 		}
 
-		i = i/2;
+		base10 = base10/2;
 	}
 
 	base2Word[WORD_SIZE] = '\0';
@@ -455,7 +460,7 @@ void convertTo2sComplement(char *base2Positive)
 
 }
 
-/*Extracts the ".extern" symbol name*/
+/*Extracts the .extern symbol name*/
 /*The function assumes the given line is an extern guidance statement*/
 
 char *extractExternSymbolName(char *line)
@@ -474,24 +479,67 @@ char *extractExternSymbolName(char *line)
 
 }
 
-int sourceOperandExists(char *line)
+/*Extracts the .entry symbol name*/
+/*The function assumes the given line is an entry guidance statement*/
+
+char *extractEntrySymbolName(char *line)
 {
-	return 1;
+	char *symbol ,*temp;
+
+	temp = strstr(line, ENTRY_GUIDANCE);
+	temp = (temp + strlen(ENTRY_GUIDANCE));
+
+	symbol = (char *)malloc(strlen(temp));
+	if(symbol == NULL) return NULL;
+
+	sscanf(temp , "%s", symbol);
+
+	return symbol;
 
 }
 
-/*Extract the integer value from the immediate addressing operand */
-/*The function assumes a valid immediate addressing operand*/
-int extractImmediateAddressingModeValue(char *operand)
-{
-	/*Skip the '#' first char */
-	return atoi(operand+1);
 
+/*Extract the the immediate addressing operand value */
+char *extractImmediateAddressingModeValue(char *operand)
+{
+	char *value, *valueStart;
+	int length;
+
+	value = NULL;
+	valueStart = operand;
+	length = 0;
+
+	/*Skip the leading spaces */
+	while(isspace(*valueStart)) valueStart++;
+
+	if(*valueStart == '#')
+	{
+		valueStart++;
+
+		while(!isspace(*(valueStart+length)) && (*(valueStart+length) != '\0'))
+		{
+			length++;
+		}
+
+		if(length>0)
+		{
+			value = (char *)malloc(length + 1);
+			if(value == NULL) exit(1);
+
+			strncpy(value, valueStart, length+1);
+
+			value[length] = '\0';
+
+		}
+
+	}
+
+	return value;
 }
 
 /*Extracts the symbol part from a valid index addressing operand */
 
-char *extractIndexAddressingSybol(char *operand)
+char *extractIndexAddressingSymbol(char *operand)
 {
 	char *symbol;
 	char *symbolStart, *symbolEnd;
@@ -502,7 +550,7 @@ char *extractIndexAddressingSybol(char *operand)
 	/*Skip the leading spaces */
 	while(isspace(*symbolStart)) symbolStart++;
 
-	symbolEnd = strchr(operand, '[') - 1;
+	symbolEnd = strchr(operand, '[');
 
 	/*Skip trailing spaces */
 	while(isspace(*symbolEnd)) symbolEnd--;
@@ -527,44 +575,125 @@ char *extractIndexAddressingOffset(char *operand)
 	char *offsetStart, *offsetEnd;
 	int offsetLength;
 
+	offset = NULL;
 	offsetStart = strchr(operand, '%') + 1;
 	/*Skip leading spaces */
 	while(isspace(*offsetStart)) offsetStart++;
 
-	offsetEnd = strchr(operand ,']') - 1;
+	offsetEnd = strchr(operand ,']');
 	/*Skip trailing spaces */
 	while(isspace(*offsetEnd)) offsetEnd--;
 
 	offsetLength = offsetEnd - offsetStart;
 
-	offset = (char *)malloc(offsetLength + 1);
-	if(offset == NULL) exit(1);
+	if(offsetLength > 0)
+	{
+		offset = (char *)malloc(offsetLength + 1);
+		if(offset == NULL) exit(1);
 
-	strncpy(offset, offsetStart, offsetLength+1);
+		strncpy(offset, offsetStart, offsetLength+1);
 
-	offset[offsetLength] = '\0';
-
+		offset[offsetLength] = '\0';
+	}
 	return offset;
 
 }
-char *extractIndex2dAddressingSybol(char *operand)
+char *extractIndex2dAddressingSymbol(char *operand)
 {
-	/*char *symbol;
+	char *symbol;
 	char *symbolStart, *symbolEnd;
 	int symbolLength;
 
-	retrun symbol;*/
+	symbol = NULL;
+	symbolStart = strchr(operand, ']') + 1;
+	symbolEnd  = strchr(symbolStart, '[');
 
-	return NULL;
+	/*Skip leading spaces */
+	while(isspace(*symbolStart)) symbolStart++;
+
+	/*Skip trailing spaces */
+	while(isspace(*symbolEnd)) symbolEnd--;
+
+	symbolLength = symbolEnd - symbolStart;
+
+	if(symbolLength > 0)
+	{
+		symbol = (char *)malloc(symbolLength + 1);
+		if(symbol == NULL) exit(1);
+
+		strncpy(symbol, symbolStart, symbolLength+1);
+
+		symbol[symbolLength] = '\0';
+
+	}
+
+	return symbol;
 }
 char *extractIndex2dAddressingOffset(char *operand)
 {
-	/*char *offset;
+	char *offset;
 	char *offsetStart, *offsetEnd;
-	int offsetLength; */
+	int offsetLength;
 
+	offset = NULL;
+	offsetStart = strchr(operand, '[') + 1;
 
-	return NULL;
+	/*Skip leading spaces */
+	while(isspace(*offsetStart)) offsetStart++;
+
+	offsetEnd = strchr(offsetStart, ']');
+
+	/*Skip the trailing spaces*/
+	while(isspace(*offsetEnd)) offsetEnd --;
+
+	offsetLength = offsetEnd - offsetStart;
+
+	if(offsetLength > 0)
+	{
+		offset = (char *)malloc(offsetLength + 1);
+		if(offset == NULL) exit(1);
+
+		strncpy(offset, offsetStart, offsetLength+1);
+
+		offset[offsetLength] = '\0';
+
+	}
+
+	return offset;
+}
+
+char *extractIndex2dAddressingRegister(char *operand)
+{
+	char *offset;
+	char *offsetStart, *offsetEnd;
+	int offsetLength;
+
+	offset = NULL;
+	/*Advance to the second index beginning*/
+	offsetStart = strchr(operand, ']');
+	offsetStart = strchr(offsetStart, '[') + 1;
+
+	/*Skip leading spaces */
+	while(isspace(*offsetStart)) offsetStart++;
+
+	offsetEnd = strchr(offsetStart, ']');
+
+	/*Skip the trailing spaces*/
+	while(isspace(*offsetEnd)) offsetEnd --;
+
+	offsetLength = offsetEnd - offsetStart;
+
+	if(offsetLength > 0)
+	{
+		offset = (char *)malloc(offsetLength + 1);
+		if(offset == NULL) exit(1);
+
+		strncpy(offset, offsetStart, offsetLength+1);
+
+		offset[offsetLength] = '\0';
+	}
+
+	return offset;
 
 }
 
@@ -581,7 +710,6 @@ int isEmptyLine(char *line)
 		}
 
 		line++;
-
 	}
 
 	return empty;

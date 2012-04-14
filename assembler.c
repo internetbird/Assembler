@@ -12,24 +12,25 @@ unsigned int DC; /* The data counter */
 
 #define NO_ASSEMBER_ARGUMENTS_ERROR "No assembly files supplied. Usage is: Assembler [file1] [file2] ...\n"
 #define FILE_NAME_NOT_VALID "Assembly file:%s is not valid\n"
-#define FIRST_PASS_FAILED "Executing first pass on file:%s failed.\n Terminating assembler execution.\n"
-#define SECOND_PASS_FAILED "Executing second pass on file:%s failed.\n Terminating assembler execution.\n"
+#define FIRST_PASS_FAILED "Executing first pass on file:%s failed.\nTerminating assembler execution.\n"
+#define SECOND_PASS_FAILED "Executing second pass on file:%s failed.\nTerminating assembler execution.\n"
 
 char *DataMemory[DATA_MEMORY_SIZE];
-char *InstructionMemory[INSTRUCTION_MEMORY_SIZE];
+char *InstructionMemory[INSTRUCTION_MEMORY_SIZE+1]; /*Last char is for the linker*/
 
 void insertIntToDataMemory(int value);
 
 int main(int argc, char *argv[])
 {
 	FILE *file;
-	char *assemblyFileName;
+	char *assemblyFileName, *fileNameWithoutExtension;
 	int i;
 
 	if(argc < 2) fprintf(stderr, NO_ASSEMBER_ARGUMENTS_ERROR);
 
 	for(i = 1; i<argc ; i++) /*Iterate over all the assembly files */
 	{
+		fileNameWithoutExtension = strdup(argv[i]); /*We need to keep the name for the output files*/
 		assemblyFileName = strcat(argv[i], ASSEMBLY_FILE_EXT);
 
 		if((file = fopen(assemblyFileName, "r")) != NULL)
@@ -46,9 +47,9 @@ int main(int argc, char *argv[])
 				exit(1);
 			}
 
-			writeObjFile(argv[i], InstructionMemory);
-			writeExtFile(argv[i], DataMemory);
-			writeEntFile(argv[i], DataMemory);
+			writeObjFile(fileNameWithoutExtension, InstructionMemory, DataMemory);
+			writeExtFile(fileNameWithoutExtension);
+			writeEntFile(fileNameWithoutExtension);
 
 
 		} else
@@ -69,7 +70,7 @@ void insertDataToMemory(char *line)
 {
 	StatementType type;
 	char *data;
-	int insertedWords = 0, i;
+	int i;
 
 	type = getStatementType(line);
 
@@ -82,7 +83,7 @@ void insertDataToMemory(char *line)
 		while(data  != NULL)
 		{
 			insertIntToDataMemory(atoi(data));
-			insertedWords++;
+			DC++;
 
 			data = extractNextGuidanceData();
 		}
@@ -95,25 +96,32 @@ void insertDataToMemory(char *line)
 		for(i=0; i<strlen(data); i++)
 		{
 			insertIntToDataMemory(data[i]);
-			insertedWords++;
+			DC++;
 		}
 
 		/* Add "zero" word */
 		insertIntToDataMemory(0);
-		insertedWords++;
+		DC++;
 
 	}
 
-	DC = DC + insertedWords;
-
 }
 
-void insertInstructionToMemory(char *word)
+void insertInstructionToMemory(char *word, char *linkerChar)
 {
 
-	InstructionMemory[IC] = word;
+	if(linkerChar != NULL)
+	{
+		InstructionMemory[IC] = strcat(word, linkerChar);
+
+	} else
+	{
+		InstructionMemory[IC] = word;
+	}
+
+	printf("Inserted word '%s' to IC:%d\n", InstructionMemory[IC], IC);
+
 	IC++;
-	printf("Inserted word '%s' to IC:%d", word, IC);
 
 }
 
@@ -126,7 +134,7 @@ void insertIntToDataMemory(int value)
 	word = convertBase10toBase2(value);
 	DataMemory[DC] = word;
 
-	DC++;
+	printf("Inserted value '%d' to DC:%d\n", value, DC);
 
 }
 
@@ -136,24 +144,17 @@ void addAssemblerError(const char *errorMessage, int lineNumber)
 	fprintf(stderr, "Error at line %d:%s\n",lineNumber, errorMessage );
 }
 
-/*Returns the absolute value of the instruction counter */
+
 unsigned int getInstructionCounter()
 {
-	return  IC + IC_STARTUP_VALUE;
+	return  IC;
 
-}
-
-/*Returns the value of the instruction counter relative to the memory beginning address*/
-unsigned int getInstructionCounterOffset()
-{
-	return IC;
 }
 
 
 unsigned int getDataCounter()
 {
 	return DC;
-
 }
 
 void resetAssemblyCounters()
@@ -168,11 +169,12 @@ char *getInstructionMemoryWord(unsigned int index)
 	return InstructionMemory[index];
 
 }
-void setInstructionMemoryWord(unsigned int index, char *value)
+void setInstructionMemoryWord(unsigned int index, char *value, char *linkerChar)
 {
-	InstructionMemory[index] = value;
-
+	InstructionMemory[index] = strcat(value, linkerChar);
+	printf("Inserted word '%s' to IC:%d\n", InstructionMemory[index], index);
 }
+
 
 
 

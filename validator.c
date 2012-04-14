@@ -8,12 +8,6 @@
 #include "symbols.h"
 #include "commands.h"
 
-#define HASH_KEY '#'
-#define HASH_STRING "#"
-#define INDEX_ADDRESSING_STRING_1 "["
-#define INDEX_ADDRESSING_STRING_2 "%"
-#define INDEX_ADDRESSING_END_CHAR ']'
-#define INDEX2D_ADDRESSING_STRING "[]"
 #define DATA_NOT_AN_INTEGER "One of the data parameters is not an integer."
 #define NO__GUIDANCE_STRING "There is no guidance string."
 #define COMMAND_DOES_NOT_SUPPORT_OPERAND "The command does not support this operand."
@@ -176,7 +170,7 @@ int isValidIntegetList(char *list)
 
 int isInteger(char *value)
 {
-	while (*value !='\0')
+	while (*value !='\0' && *value != '\n' && *value != EOF)
 	{
 		if(isdigit(*value)|| *value == '+' || *value == '-') /*spaces have already been removed*/
 		{
@@ -218,7 +212,7 @@ char *validateEntryGuidance(CommandParts parts)
 {
 	char *result = NULL;
 
-	if(!isValidSymbol(parts.symbol))
+	if(!isValidSymbol(parts.entrySymbol))
 	{
 		result = SYMBOL_NOT_VALID;
 
@@ -232,7 +226,7 @@ char *validateDataGuidance(CommandParts parts)
 {
 	char *result = NULL;
 
-	if(!isValidIntegetList(extractGuidanceData(parts.data)))
+	if(!isValidIntegetList(parts.data))
 	{
 		result = DATA_NOT_AN_INTEGER;
 
@@ -246,7 +240,7 @@ char *validateStringGuidance(CommandParts parts)
 {
 	char *result = NULL;
 
-	if(extractGuidanceString(parts.data) == NULL)
+	if(parts.data == NULL)
 	{
 		result = NO__GUIDANCE_STRING;
 	}
@@ -263,7 +257,9 @@ char *validateCommandOperands(CommandParts parts)
 
 	/*Validate the source operand*/
 
+
 	result = validateCommandOperand(parts.sourceOperand, command.srcOperandAddressingModes);
+
 
 	if(result == NULL) /*Validate the destination operand */
 	{
@@ -287,21 +283,24 @@ char *validateCommandOperand(char *operand, short allowedAddressingModes)
 	{
 		result = COMMAND_REQUIRES_OPERAND;
 
-	} else /*There are allowed addressing modes and the operand is not empty */
+	} else /*There are allowed addressing modes*/
 	{
-		addressingMode = parseAddressingMode(operand);
-
-		result = validateAddressingMode(addressingMode, operand);
-
-		if(result == NULL) /*Operand has a valid addressing mode form */
+		if(operand != NULL)
 		{
-			/*Check that the operand addressing mode is allowed for the given command */
-			if(!(allowedAddressingModes & convertToAddressingModeFlag(addressingMode)))
+			addressingMode = parseAddressingMode(operand);
+
+			result = validateAddressingMode(addressingMode, operand);
+
+			if(result == NULL) /*Operand has a valid addressing mode form */
 			{
-				result = ADDRESSING_MODE_NOT_ALLOWED;
+				/*Check that the operand addressing mode is allowed for the given command */
+				if(!(allowedAddressingModes & convertToAddressingModeFlag(addressingMode)))
+				{
+					result = ADDRESSING_MODE_NOT_ALLOWED;
+
+				}
 
 			}
-
 		}
 
 	}
@@ -346,16 +345,10 @@ char *validateAddressingMode(int addressingMode, char *operand)
 
 char *validateImmediateAddressingMode(char *operand)
 {
-	char *tmp = strdup(operand);
+
 	char *result = NULL;
 
-	if ((strchr(tmp,HASH_KEY))!= NULL)
-	{
-		strtok(tmp,HASH_STRING);
-		if (isInteger(tmp) == 0)
-		result = NOT_A_VALID_IMMEDIATE_ADDRESSING_MODE;
-	}
-	else
+	if (!isInteger(extractImmediateAddressingModeValue(operand)))
 	{
 		result = NOT_A_VALID_IMMEDIATE_ADDRESSING_MODE;
 	}
@@ -377,34 +370,14 @@ char *validateDirectAddressingMode(char *operand)
 
 char *validateIndexAddressingMode(char *operand)
 {
-  char *result = NULL;
-  char *temp = strdup(operand), *temp2;
+  char *symbol, *offset, *result;
 
-  /*Extract the first symbol */
-  strtok(temp, INDEX_ADDRESSING_STRING_1);
+  result = NULL;
 
-  if (isValidSymbol(temp))
-  {
-	/*Extract and validate the second symbol */
-	temp = strtok(NULL,INDEX_ADDRESSING_STRING_2);
+  symbol = extractIndexAddressingOffset(operand);
+  offset = extractIndexAddressingOffset(operand);
 
-	temp2 = strchr(temp, INDEX_ADDRESSING_END_CHAR);
-
-	if(temp2 == NULL) /*No end char */
-	{
-		result = NOT_A_VALID_INDEX_ADDRESSING_MODE;
-	}
-
-	else
-	{
-	    *temp2 = '\0'; /*Replace the ']' with '\0' to terminate the second symbol string */
-
-		if (temp != NULL && isValidSymbol(temp)==0)
-		{
-			result = NOT_A_VALID_INDEX_ADDRESSING_MODE;
-		}
-	}
-  } else
+  if (!isValidSymbol(symbol) || !isValidSymbol(offset))
   {
 	  result = NOT_A_VALID_INDEX_ADDRESSING_MODE;
   }
@@ -414,24 +387,19 @@ char *validateIndexAddressingMode(char *operand)
 }
 char *validateIndex2dAddressingMode(char *operand)
 {
-	char *result = NULL;
-	char *temp = strdup(operand);
+	char *symbol, *offset1, *offset2, *result;
 
-	strtok(temp,INDEX2D_ADDRESSING_STRING);
+	result = NULL;
 
-	if (temp != NULL && isValidSymbol(temp)!=0)
+	symbol = extractIndex2dAddressingSymbol(operand);
+	offset1 = extractIndex2dAddressingOffset(operand);
+	offset2 = extractIndex2dAddressingRegister(operand);
+
+
+	if (!isValidSymbol(symbol) || !isValidSymbol(offset1) || !isRegister(offset2))
 	{
-		if(strtok(NULL,INDEX2D_ADDRESSING_STRING) !=NULL && isValidSymbol(temp) !=0)
-		{
-			if(strtok(NULL,INDEX2D_ADDRESSING_STRING) == NULL || isRegister(temp)==0)
-			{
-				result = NOT_A_VALID_INDEX2D_ADDRESSING_MODE;
-			}
-
-		} else result = NOT_A_VALID_INDEX2D_ADDRESSING_MODE;
-
+		result = NOT_A_VALID_INDEX2D_ADDRESSING_MODE;
 	}
-	else result = NOT_A_VALID_INDEX2D_ADDRESSING_MODE;
 
 	return result;
 
@@ -447,6 +415,7 @@ char *validateRegisterAddressingMode(char *operand)
 
 	return result;
 }
+
 
 
 

@@ -13,6 +13,7 @@ typedef struct
 	char *sourceOperand;
 	char *destinationOperand;
 	char *externSymbol;
+	char *entrySymbol;
 	char *data;
 
 } CommandParts;
@@ -34,14 +35,15 @@ char *extractFirstGuidanceData(char *data);
 char *extractNextGuidanceData();
 char *extractGuidanceData(char *line);
 char *extractGuidanceString(char *line);
-int extractImmediateAddressingModeValue(char *operand);
+char *extractImmediateAddressingModeValue(char *operand);
 
 /*Extracts the symbol part from a valid index addressing operand */
-char *extractIndexAddressingSybol(char *operand);
+char *extractIndexAddressingSymbol(char *operand);
 /*Extracts the offset part from a valid index addressing operand */
 char *extractIndexAddressingOffset(char *operand);
-char *extractIndex2dAddressingSybol(char *operand);
+char *extractIndex2dAddressingSymbol(char *operand);
 char *extractIndex2dAddressingOffset(char *operand);
+char *extractIndex2dAddressingRegister(char *operand);
 
 int isSymbolGuidanceCommand(char *line);
 

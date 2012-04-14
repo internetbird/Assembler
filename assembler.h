@@ -15,6 +15,11 @@
 #define SYMBOL_END_CHAR ':'
 #define MAX_LINE_LENGTH 80
 #define ASSEMBLY_FILE_EXT ".as"
+#define LINKER_ABSOLUTE "a"
+#define LINKER_RELOCATABLE "r"
+#define LINKER_EXTERNAL "e"
+#define OFFSET_MARK_LABEL '*' /*A character added to the beginning of a symbol to mark that it is an offset*/
+#define OFFSET_MARK_STRING "*"
 
 /* Addressing Modes */
 #define IMMEDIATE_ADDRESSING_MODE 0
@@ -51,21 +56,13 @@ typedef enum statement_type
 
 } StatementType;
 
-
 void insertDataToMemory(char *line); /* Inserts a string or number data to the data memory . Returns the number of words that where inserted. */
-void insertInstructionToMemory(char *word); /*Inserts a single word to the instruction memory */
+void insertInstructionToMemory(char *word, char *linkerChar); /*Inserts a single word to the instruction memory */
 void addAssemblerError(const char *errorMessage, int lineNumber);
 void resetAssemblyCounters();
-
-/*Returns the absolute value of the instruction counter */
 unsigned int getInstructionCounter();
-/*Returns the value of the instruction counter relative to the memory beginning address*/
-unsigned int getInstructionCounterOffset();
 unsigned int getDataCounter();
 char *getInstructionMemoryWord(unsigned int index);
-void setInstructionMemoryWord(unsigned int index, char *value);
-
-
-
+void setInstructionMemoryWord(unsigned int index, char *value, char* linkerChar);
 
 #endif
