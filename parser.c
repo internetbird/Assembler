@@ -12,10 +12,6 @@
 #include "commands.h"
 #include "assembler.h"
 
-/*string values of the '"' char */
-#define DOUBLE_QUOTES_START "\342\200\234"
-#define DOUBLE_QUOTES_END "\342\200\235"
-
 
 /* Extracts a symbol name from the given line     */
 /* The function assumes that the line starts with */
@@ -31,6 +27,7 @@ int isLineContainsSymbol(char *line);
 char *getSubstringAfterSymbol(char *line);
 char *getSubstringAfterCommand(char *line);
 void convertTo2sComplement(char base2Positive[]);
+int sourceOperandExists(char *line);
 int isEmptyLine(char *line);
 
 
@@ -96,7 +93,11 @@ CommandParts parseAssemblyLine(char *line)
 
 			if(line != NULL && (*line != '\n') && (*line != '\0') && (*line != EOF)) /*There are operands*/
 			{
-				parts.sourceOperand = extractSourceOperand(line);
+				 if(sourceOperandExists(line))
+				 {
+					 parts.sourceOperand = extractSourceOperand(line);
+				 }
+
 				parts.destinationOperand = extractDestinationOperand(line);
 			}
 
@@ -229,8 +230,8 @@ char *extractGuidanceString(char *line)
 {
 	char *guidanceString, *stringStart, *stringEnd;
 
-	stringStart = strstr(line, DOUBLE_QUOTES_START) + 3; /*Double quotes is 3 characters long*/
-	stringEnd = strstr(line, DOUBLE_QUOTES_END);
+	stringStart = strstr(line, "\"") + 1;
+	stringEnd = strstr(stringStart, "\"");
 
 	guidanceString = (char *)malloc(stringEnd-stringStart);
 	if(guidanceString == NULL) return NULL;
@@ -328,6 +329,8 @@ int isLineContainsSymbol(char *line)
 
 int parseAddressingMode(char *operand)
 {
+	char *temp;
+
 	if(isRegister(operand))
 	{
 		return REGISTER_ADDRESSING_MODE;
@@ -336,13 +339,14 @@ int parseAddressingMode(char *operand)
 	{
 		return IMMEDIATE_ADDRESSING_MODE;
 
-	} else if(strstr(operand, "[%") != NULL)
+	} else if((temp = strstr(operand,"[" )) != NULL) /*Opening square bracket -> index addressing mode */
 	{
-		return INDEX_ADDRESSING_MODE;
+		if(strstr(temp+1, "[") != NULL) /*Two consecutive opening brackets -> Index 2d addressing mode*/
+		{
+			return INDEX2D_ADDRESSING_MODE;
+		}
 
-	} else if(strstr(operand,"[" ) != NULL)
-	{
-		return INDEX2D_ADDRESSING_MODE;
+		return INDEX_ADDRESSING_MODE;
 	}
 
 	return DIRECT_ADDRESSING_MODE;
@@ -697,15 +701,21 @@ char *extractIndex2dAddressingRegister(char *operand)
 
 }
 
+int sourceOperandExists(char *line)
+{
+	return strchr(line, ',') != NULL;
+
+}
+
 int isEmptyLine(char *line)
 {
-	int empty = 1;
+	int empty = TRUE;
 
 	while( (*line) != '\n' && (*line) != EOF)
 	{
 		if(!isspace(*line))
 		{
-			empty = 0;
+			empty = FALSE;
 			break;
 		}
 

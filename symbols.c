@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "symbols.h"
+#include "assembler.h"
 
 
 SymbolTable assemblerSymbolTable;
@@ -51,7 +52,7 @@ Symbol *getSymbol(char *name)
 int isSymbolExists(char *name)
 {
 	SymbolNode *current;
-	int exists = 0;
+	int exists = FALSE;
 
 	current = assemblerSymbolTable.first;
 
@@ -59,7 +60,7 @@ int isSymbolExists(char *name)
 	{
 		if(strcmp(current->symbol.name, name) == 0)
 		{
-			exists = 1;
+			exists = TRUE;
 			break;
 		}
 
@@ -72,7 +73,7 @@ int isSymbolExists(char *name)
 int isExternSymbolExists(char *name)
 {
 	SymbolNameNode *current;
-	int exists = 0;
+	int exists = FALSE;
 
 	current = externSymbolList.first;
 
@@ -80,7 +81,7 @@ int isExternSymbolExists(char *name)
 	{
 		if(strcmp(current->name, name) == 0)
 		{
-			exists = 1;
+			exists = TRUE;
 			break;
 		}
 
@@ -94,7 +95,7 @@ int isExternSymbolExists(char *name)
 int isEntrySymbolExists(char *name)
 {
 	SymbolNameNode *current;
-	int exists = 0;
+	int exists = FALSE;
 
 	current = entrySymbolList.first;
 
@@ -102,7 +103,7 @@ int isEntrySymbolExists(char *name)
 	{
 		if(strcmp(current->name, name) == 0)
 		{
-			exists = 1;
+			exists = TRUE;
 			break;
 		}
 

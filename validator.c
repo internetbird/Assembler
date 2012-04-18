@@ -48,13 +48,14 @@ char *validateRegisterAddressingMode(char *operand);
 /* or an error message otherwise.                 */
 char *validateAssemblyLine(char *line)
 {
-
 	CommandParts parts; /* Unfilled fields must be NULL in order for the function to work */
-
 	char *validationResult = NULL;
+	char *lineToValidate;
 
-	parts = parseAssemblyLine(line);
-	StatementType type = getStatementType(line);
+	lineToValidate = strdup(line); /*We work on a copy to keep the original line unchanged*/
+
+	parts = parseAssemblyLine(lineToValidate);
+	StatementType type = getStatementType(lineToValidate);
 
 	switch (type){
 
@@ -127,24 +128,24 @@ int isValidSymbol(char *symbol)
 
 			} else
 			{
-				return 0;
+				return FALSE;
 			}
 		}
 
 	} else
 	{
-		return 0;
+		return FALSE;
 
 	}
 
-	return 1;
+	return TRUE;
 
 }
 
 int isValidIntegetList(char *list)
 {
 	char *currData;
-	int isValid = 1;
+	int isValid = TRUE;
 
 	if(list == NULL) return 0;
 
@@ -154,36 +155,39 @@ int isValidIntegetList(char *list)
 		{
 			while((currData = extractNextGuidanceData()) != NULL)
 			{
-				if(!isInteger(currData)) isValid = 0;
+				if(!isInteger(currData)) isValid = FALSE;
 			}
 		}
 		else
 		{
-			isValid = 0;
+			isValid = FALSE;
 		}
 	} else /*list is empty */
 	{
-		isValid = 0;
+		isValid = FALSE;
 	}
 	return isValid;
 }
 
 int isInteger(char *value)
 {
+	/*Skip leading spaces*/
+	while(isspace(*value)) value++;
+
 	while (*value !='\0' && *value != '\n' && *value != EOF)
 	{
-		if(isdigit(*value)|| *value == '+' || *value == '-') /*spaces have already been removed*/
+		if(isdigit(*value)|| *value == '+' || *value == '-')
 		{
 			value++;
 
 		} else
 		{
-			return 0;
+			return FALSE;
 
 		}
 
 	}
-	return 1;
+	return TRUE;
 }
 
 

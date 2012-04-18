@@ -44,6 +44,9 @@
 #define ENTRY_GUIDANCE ".entry"
 #define EXTERN_GUIDANCE ".extern"
 
+#define TRUE 1
+#define FALSE 0
+
 typedef enum statement_type
 {
 	EMPTY,

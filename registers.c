@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "registers.h"
+#include "assembler.h"
 
 #define NUM_OF_REGISTERS 8
 
@@ -43,11 +44,11 @@ int isRegister(char *name)
 {
 	if(getRegisterBase2Code(name) == NULL)
 	{
-		return 0;
+		return FALSE;
 
 	} else
 	{
-		return 1;
+		return TRUE;
 	}
 
 }

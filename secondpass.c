@@ -17,7 +17,7 @@ char * word;
 int executeSecondPass()
 {
 
-	int i = 0, noErrorsFound = 1;
+	int i = 0, noErrorsFound = TRUE;
 	unsigned int instructionMemoryLength;
 	char *currInstructionWord ;
 	Symbol *currSymbol;
@@ -46,7 +46,7 @@ int executeSecondPass()
 			{
 
 				addAssemblerError(SYMBOL_NOT_VALID, i);
-				noErrorsFound = 0;
+				noErrorsFound = FALSE;
 
 			}
 		}
@@ -60,7 +60,7 @@ int executeSecondPass()
 			} else
 			{
 				addAssemblerError(SYMBOL_NOT_VALID, i);
-				noErrorsFound = 0;
+				noErrorsFound = FALSE;
 
 			}
 		}

@@ -13,11 +13,15 @@ char *getEmptyInstructionWord();
 int executeFirstPass(FILE *assemblyFile)
 {
 
-	int lineNum = 1, val, addressingMode, operand2IsOffset;
-	int lineContainsSymbol = 0, success = 1;
-	char line[100], *instructionWord, *operandWord1, *operandWord2;
+	int lineNum = 1, val, addressingMode;
+	int lineContainsSymbol = FALSE, success = TRUE;
+	char line[100], *instructionWord;
+	char *srcOperandWord1, *srcOperandWord2; /*Two additional words for the source operand to store symbols (if they exists) */
+	char *dstOperandWord1, *dstOperandWord2; /*Two additional words for the destination operand to store symbols (if they exists) */
+	int srcOperand2IsOffset, dstOperand2IsOffset;
 	char *validationMsg, *commandBase2Code;
-	char *operand1LinkerChar, *temp;
+	char *srcOperand1LinkerChar, *dstOperand1LinkerChar; /*The additional word linker char(a/e/r) */
+	char *temp;
 	StatementType type;
 	CommandParts parts;
 
@@ -51,7 +55,6 @@ int executeFirstPass(FILE *assemblyFile)
 
 						insertDataToMemory(line);
 
-
 					/*If it's an .extern symbol guidance line insert it to the external symbols list. */
 					} else if(type == EXTERNGUIDANCE)
 					{
@@ -72,13 +75,17 @@ int executeFirstPass(FILE *assemblyFile)
 							insertSymbol(parts.symbol, CODE, getInstructionCounter());
 						}
 
-						/*Initialize the instruction words*/
+						/*Reset the instruction words*/
 						instructionWord = getEmptyInstructionWord();
-						operandWord1 = NULL;
-						operandWord2 = NULL;
-						operand1LinkerChar = NULL;
+						srcOperandWord1 = NULL;
+						srcOperandWord2 = NULL;
+						dstOperandWord1 = NULL;
+						dstOperandWord2 = NULL;
+						srcOperand1LinkerChar = NULL;
+						dstOperand1LinkerChar = NULL;
 						temp = NULL;
-						operand2IsOffset = 0;
+						srcOperand2IsOffset = FALSE;
+						dstOperand2IsOffset = FALSE;
 
 						/*Get the command base2 code */
 						commandBase2Code = getCommandBase2Code(parts.command);
@@ -86,7 +93,7 @@ int executeFirstPass(FILE *assemblyFile)
 						/*Copy the command bits to the instruction word*/
 						strncpy(instructionWord, commandBase2Code, COMMAND_BITS_LENGTH);
 
-
+						/*Create the memory words for the source operand*/
 						if(parts.sourceOperand != NULL)
 						{
 							addressingMode = parseAddressingMode(parts.sourceOperand);
@@ -107,30 +114,31 @@ int executeFirstPass(FILE *assemblyFile)
 							} else if(addressingMode == IMMEDIATE_ADDRESSING_MODE)
 							{
 								val = atoi(extractImmediateAddressingModeValue(parts.sourceOperand));
-								operandWord1 = convertBase10toBase2(val);
-								operand1LinkerChar = LINKER_ABSOLUTE;
+								srcOperandWord1 = convertBase10toBase2(val);
+								srcOperand1LinkerChar = LINKER_ABSOLUTE;
 
 							/*If it's a direct addressing mode, copy the value of the operand to the first operand word*/
 							} else if(addressingMode == DIRECT_ADDRESSING_MODE)
 							{
-								operandWord1 = parts.sourceOperand;
+								srcOperandWord1 = parts.sourceOperand;
 
 
 							} else if(addressingMode == INDEX_ADDRESSING_MODE)
 							{
-								operandWord1 = extractIndexAddressingSymbol(parts.sourceOperand);
-								operandWord2 = extractIndexAddressingOffset(parts.sourceOperand);
-								operand2IsOffset = 1;
+								srcOperandWord1 = extractIndexAddressingSymbol(parts.sourceOperand);
+								srcOperandWord2 = extractIndexAddressingOffset(parts.sourceOperand);
+								srcOperand2IsOffset = TRUE;
 
 							} else if(addressingMode == INDEX2D_ADDRESSING_MODE)
 							{
-								operandWord1 = extractIndex2dAddressingSymbol(parts.sourceOperand);
-								operandWord2 = extractIndex2dAddressingOffset(parts.sourceOperand);
+								srcOperandWord1 = extractIndex2dAddressingSymbol(parts.sourceOperand);
+								srcOperandWord2 = extractIndex2dAddressingOffset(parts.sourceOperand);
 
 							}
 
 						}
 
+						/*Create the memory words for the destination operand*/
 						if(parts.destinationOperand != NULL)
 						{
 							addressingMode = parseAddressingMode(parts.destinationOperand);
@@ -151,25 +159,25 @@ int executeFirstPass(FILE *assemblyFile)
 							else if(addressingMode == IMMEDIATE_ADDRESSING_MODE)
 							{
 								val = atoi(extractImmediateAddressingModeValue(parts.destinationOperand));
-								operandWord1 = convertBase10toBase2(val);
-								operand1LinkerChar = LINKER_ABSOLUTE;
+								dstOperandWord1 = convertBase10toBase2(val);
+								dstOperand1LinkerChar = LINKER_ABSOLUTE;
 
 							/*If it's a direct addressing mode, copy the value of the operand to the first operand word*/
 							} else if(addressingMode == DIRECT_ADDRESSING_MODE)
 							{
-								operandWord1 = parts.destinationOperand;
+								dstOperandWord1 = parts.destinationOperand;
 
 
 							} else if(addressingMode == INDEX_ADDRESSING_MODE)
 							{
-								operandWord1 = extractIndexAddressingSymbol(parts.destinationOperand);
-								operandWord2 = extractIndexAddressingOffset(parts.destinationOperand);
-								operand2IsOffset = 1;
+								dstOperandWord1 = extractIndexAddressingSymbol(parts.destinationOperand);
+								dstOperandWord2 = extractIndexAddressingOffset(parts.destinationOperand);
+								dstOperand2IsOffset = TRUE;
 
 							} else if(addressingMode == INDEX2D_ADDRESSING_MODE)
 							{
-								operandWord1 = extractIndex2dAddressingSymbol(parts.destinationOperand);
-								operandWord2 = extractIndex2dAddressingOffset(parts.destinationOperand);
+								dstOperandWord1 = extractIndex2dAddressingSymbol(parts.destinationOperand);
+								dstOperandWord2 = extractIndex2dAddressingOffset(parts.destinationOperand);
 
 							}
 						}
@@ -177,23 +185,43 @@ int executeFirstPass(FILE *assemblyFile)
 						insertInstructionToMemory(instructionWord, LINKER_ABSOLUTE);
 
 						/* Insert the additional words if needed*/
-						if(operandWord1 != NULL)
+						if(srcOperandWord1 != NULL)
 						{
-							insertInstructionToMemory(operandWord1, operand1LinkerChar);
+							insertInstructionToMemory(srcOperandWord1, srcOperand1LinkerChar);
 						}
 
-						if(operandWord2 != NULL)
+						if(srcOperandWord2 != NULL)
 						{
-							if(operand2IsOffset) /*Add the symbol offset mark*/
+							if(srcOperand2IsOffset) /*Add the symbol offset mark for the second pass*/
+							{
+								temp = (char*)malloc(2);
+								if(temp == NULL) exit(1);
+
+								strcpy(temp,OFFSET_MARK_STRING); /*This mark is used to signal the second pass that the symbol is and offset*/
+								srcOperandWord2 = strcat(temp, srcOperandWord2);
+							}
+
+							insertInstructionToMemory(srcOperandWord2, NULL);
+						}
+
+						/*Add additional words for the destination operand*/
+						if(dstOperandWord1 != NULL)
+						{
+							insertInstructionToMemory(dstOperandWord1, dstOperand1LinkerChar);
+						}
+
+						if(dstOperandWord2 != NULL)
+						{
+							if(dstOperand2IsOffset) /*Add the symbol offset mark*/
 							{
 								temp = (char*)malloc(2);
 								if(temp == NULL) exit(1);
 
 								strcpy(temp,OFFSET_MARK_STRING);
-								operandWord2 = strcat(temp, operandWord2);
+								dstOperandWord2 = strcat(temp, dstOperandWord2);
 							}
 
-							insertInstructionToMemory(operandWord2, NULL);
+							insertInstructionToMemory(dstOperandWord2, NULL);
 						}
 
 						}
@@ -202,7 +230,7 @@ int executeFirstPass(FILE *assemblyFile)
 					else /*A validation error */
 					{
 						addAssemblerError(validationMsg,lineNum);
-						success = 0;
+						success = FALSE;
 					}
 
 			}
