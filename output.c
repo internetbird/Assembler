@@ -69,25 +69,33 @@ int writeExtFile(char *filename)
 	SymbolNode *current;
 	SymbolTable extSymbolTable;
 
-	fname = strdup(filename);
-	strcat(fname, ".ext");
-	extfile = fopen(fname, "w");
 	extSymbolTable = getExternSymbolTable();
 	current = extSymbolTable.first;
 
-	if (extfile != NULL)
+	if(current != NULL) /*If there are external symbols, create file */
 	{
-		while (current != NULL)
+
+		fname = strdup(filename);
+		strcat(fname, ".ext");
+		extfile = fopen(fname, "w");
+
+		if (extfile != NULL)
 		{
-			fprintf(extfile, "%s %s\n", current->symbol.name , convertBase10toBase2(current->symbol.value) + EIGHT_BIT_OFFSET);
-			current = current->next;
+			while (current != NULL)
+			{
+				fprintf(extfile, "%s %s\n", current->symbol.name , convertBase10toBase2(current->symbol.value) + EIGHT_BIT_OFFSET);
+				current = current->next;
+			}
+
+			fclose(extfile);
+
+			return FILE_CREATED_SUCCESSFULY;
 		}
 
-		fclose(extfile);
-
-		return FILE_CREATED_SUCCESSFULY;
+		return FILE_COULD_NOT_BE_CREATED;
 	}
-	return FILE_COULD_NOT_BE_CREATED;
+
+	return FILE_SKIPPED_NO_RELEVANT_DATA;
 }
 
 
@@ -99,35 +107,42 @@ int writeEntFile(char *filename)
 	Symbol *currentSymbol;
 	FILE *entfile;
 
-	fname = strdup(filename);
-	strcat(fname, ".ent");
-	entfile = fopen(fname, "w");
 	entNameList = getEntrySymbolList();
 	current = entNameList.first;
 
-	if (entfile != NULL)
+	if(current != NULL) /*If there are entry symbols, create file */
 	{
-		while (current != NULL)
+
+		fname = strdup(filename);
+		strcat(fname, ".ent");
+		entfile = fopen(fname, "w");
+
+		if (entfile != NULL)
 		{
-			currentSymbol = getSymbol(current->name);
-
-			if(currentSymbol != NULL)
+			while (current != NULL)
 			{
-				fprintf(entfile, "%s %s\n", current->name, convertBase10toBase2(currentSymbol->value)+ EIGHT_BIT_OFFSET);
-				current = current->next;
+				currentSymbol = getSymbol(current->name);
 
-			} else /*The entry symbol does not exist in the symbol table*/
-			{
-				return FILE_COULD_NOT_BE_CREATED;
+				if(currentSymbol != NULL)
+				{
+					fprintf(entfile, "%s %s\n", current->name, convertBase10toBase2(currentSymbol->value)+ EIGHT_BIT_OFFSET);
+					current = current->next;
+
+				} else /*The entry symbol does not exist in the symbol table*/
+				{
+					return FILE_COULD_NOT_BE_CREATED;
+				}
 			}
+
+			fclose(entfile);
+
+			return FILE_CREATED_SUCCESSFULY;
 		}
 
-		fclose(entfile);
-
-		return FILE_CREATED_SUCCESSFULY;
+			return FILE_COULD_NOT_BE_CREATED;
 	}
 
-	return FILE_COULD_NOT_BE_CREATED;
+	return FILE_SKIPPED_NO_RELEVANT_DATA;
 }
 
 

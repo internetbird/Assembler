@@ -14,6 +14,11 @@ unsigned int DC; /* The data counter */
 #define FILE_NAME_NOT_VALID "Assembly file:%s is not valid\n"
 #define FIRST_PASS_FAILED "Executing first pass on file:%s failed.\nTerminating assembler execution.\n"
 #define SECOND_PASS_FAILED "Executing second pass on file:%s failed.\nTerminating assembler execution.\n"
+#define OB_FILE_CREATION_FAILED "Creating .ob file for assembly file:%s, failed\n"
+#define ENT_FILE_CREATION_FAILED "Creating .ent file for assembly file:%s, failed\n"
+#define EXT_FILE_CREATION_FAILED "Creating .ext file for assembly file:%s, failed\n"
+
+#define ASSEMBLER_EXECUTION_FAILED 1 /*General failure exit code */
 
 char *DataMemory[DATA_MEMORY_SIZE];
 char *InstructionMemory[INSTRUCTION_MEMORY_SIZE+1]; /*Last char is for the linker*/
@@ -24,14 +29,23 @@ int main(int argc, char *argv[])
 {
 	FILE *file;
 	char *assemblyFileName, *fileNameWithoutExtension;
-	int i;
+	int i, fileCreateResult;
 
 	if(argc < 2) fprintf(stderr, NO_ASSEMBER_ARGUMENTS_ERROR);
 
 	for(i = 1; i<argc ; i++) /*Iterate over all the assembly files */
 	{
 		fileNameWithoutExtension = strdup(argv[i]); /*We need to keep the name for the output files*/
-		assemblyFileName = strcat(argv[i], ASSEMBLY_FILE_EXT);
+		assemblyFileName = (char *)malloc(strlen(fileNameWithoutExtension) + strlen(ASSEMBLY_FILE_EXT) + 1); /*Allocate memory for the full assembly file name*/
+
+		if(assemblyFileName == NULL) /*Memory could not be allocated*/
+		{
+			exit(ASSEMBLER_EXECUTION_FAILED);
+		}
+
+		/*Build the full assembly file name*/
+		assemblyFileName =  strdup(argv[i]);
+		strcat(assemblyFileName, ASSEMBLY_FILE_EXT);
 
 		if((file = fopen(assemblyFileName, "r")) != NULL)
 		{
@@ -47,16 +61,35 @@ int main(int argc, char *argv[])
 				exit(1);
 			}
 
-			writeObjFile(fileNameWithoutExtension, InstructionMemory, DataMemory);
-			writeExtFile(fileNameWithoutExtension);
-			writeEntFile(fileNameWithoutExtension);
+			fileCreateResult = writeObjFile(fileNameWithoutExtension, InstructionMemory, DataMemory);
+
+			if(fileCreateResult == FILE_COULD_NOT_BE_CREATED)
+			{
+				fprintf(stderr, OB_FILE_CREATION_FAILED, assemblyFileName);
+			}
+
+			fileCreateResult = writeExtFile(fileNameWithoutExtension);
+
+			if(fileCreateResult == FILE_COULD_NOT_BE_CREATED)
+			{
+				fprintf(stderr, EXT_FILE_CREATION_FAILED, assemblyFileName);
+			}
+
+			fileCreateResult = writeEntFile(fileNameWithoutExtension);
+
+			if(fileCreateResult == FILE_COULD_NOT_BE_CREATED)
+			{
+				fprintf(stderr, ENT_FILE_CREATION_FAILED, assemblyFileName);
+			}
 
 
 		} else
 		{
 			fprintf(stderr, FILE_NAME_NOT_VALID, assemblyFileName);
-			exit(1);
+			exit(ASSEMBLER_EXECUTION_FAILED);
 		}
+
+		free(assemblyFileName);
 	}
 	return 0;
 }
@@ -64,7 +97,6 @@ int main(int argc, char *argv[])
 
 /* Inserts a data or string to the data memory image. */
 /* The function assumes that the line contains a data guidance command. */
-
 
 void insertDataToMemory(char *line)
 {

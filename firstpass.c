@@ -21,7 +21,7 @@ int executeFirstPass(FILE *assemblyFile)
 	int srcOperand2IsOffset, dstOperand2IsOffset;
 	char *validationMsg, *commandBase2Code;
 	char *srcOperand1LinkerChar, *dstOperand1LinkerChar; /*The additional word linker char(a/e/r) */
-	char *temp;
+	char *temp, *insertionResult;
 	StatementType type;
 	CommandParts parts;
 
@@ -50,7 +50,14 @@ int executeFirstPass(FILE *assemblyFile)
 					{
 						if(lineContainsSymbol)
 						{
-							insertSymbol(parts.symbol, DATA, getDataCounter());
+							insertionResult = insertSymbol(parts.symbol, DATA, getDataCounter());
+
+							if(insertionResult != NULL) /*An error occurred*/
+							{
+								addAssemblerError(insertionResult,lineNum);
+								success = FALSE;
+
+							}
 						}
 
 						insertDataToMemory(line);
@@ -58,13 +65,27 @@ int executeFirstPass(FILE *assemblyFile)
 					/*If it's an .extern symbol guidance line insert it to the external symbols list. */
 					} else if(type == EXTERNGUIDANCE)
 					{
+						insertionResult = insertExternSymbolName(parts.externSymbol);
 
-						insertExternSymbolName(parts.externSymbol);
+						if(insertionResult != NULL) /*An error occurred*/
+						{
+							addAssemblerError(insertionResult,lineNum);
+							success = FALSE;
+
+						}
+
 
 					} else if(type == ENTRYGUIDANCE)
 					{
+						insertionResult = insertEntrySymbol(parts.entrySymbol);
 
-						insertEntrySymbol(parts.entrySymbol);
+						if(insertionResult != NULL) /*An error occurred*/
+						{
+							addAssemblerError(insertionResult,lineNum);
+							success = FALSE;
+
+						}
+
 
 					}
 					/* It's a command. Insert a command symbol(if exists) and the command to the instruction memory */
@@ -72,7 +93,15 @@ int executeFirstPass(FILE *assemblyFile)
 					{
 						if(lineContainsSymbol)
 						{
-							insertSymbol(parts.symbol, CODE, getInstructionCounter());
+							insertionResult = insertSymbol(parts.symbol, CODE, getInstructionCounter());
+
+							if(insertionResult != NULL) /*An error occurred*/
+							{
+								addAssemblerError(insertionResult,lineNum);
+								success = FALSE;
+
+							}
+
 						}
 
 						/*Reset the instruction words*/

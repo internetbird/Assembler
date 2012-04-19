@@ -2,8 +2,8 @@
 #define SYMBOLS_H_
 
 
-#define ERROR_SYMBOL_IS_ALREADY_IN_TABLE 1
-#define ERROR_COULD_NOT_ALLOCATE_MEMORY 2
+#define ERROR_SYMBOL_ALREADY_EXISTS "Symbol already exists. "
+#define ERROR_COULD_NOT_ALLOCATE_MEMORY "Could not allocate symbol memory."
 
 #define BASE_2_VALUE_SIZE 8
 
@@ -54,10 +54,22 @@ typedef struct
 
 void initSymboTables();
 Symbol *getSymbol(char *name);
-int insertSymbol(char *name, SymbolType type, unsigned int value);/* Inserts a new symbol to the symbols table */
-int insertExternSymbolName(char *name);
-int insertExternSymbolValue(char *name, unsigned int value);
-int insertEntrySymbol(char *name);
+
+/*Inserts a symbol with the given name, type  and value to the assembler symbol table*/
+/*Returns NULL if the insertion was successful and an error message otherwise*/
+char *insertSymbol(char *name, SymbolType type, unsigned int value);
+
+/*Inserts an external symbol name to the external symbols list */
+/*Returns NULL if the insertion was successful and an error message otherwise*/
+char *insertExternSymbolName(char *name);
+
+/*Inserts an external symbol name and value to the external symbols table(used when creating the .ex file)*/
+/*Returns NULL if the insertion was successful and an error message otherwise*/
+char *insertExternSymbolValue(char *name, unsigned int value);
+
+/*Inserts an entry symbol name to the entry symbol table */
+/*Returns NULL if the insertion was successful and an error message otherwise*/
+char *insertEntrySymbol(char *name);
 int isSymbolExists(char *name);
 int isExternSymbolExists(char *name);
 SymbolNameList getExternSymbolList();

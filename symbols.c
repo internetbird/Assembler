@@ -114,12 +114,16 @@ int isEntrySymbolExists(char *name)
 
 }
 
-int insertSymbol(char *name, SymbolType type, unsigned int value)
+
+
+/*Inserts a symbol with the given name, type  and value to the assembler symbol table*/
+/*Returns NULL if the insertion was successful and an error message otherwise*/
+char  *insertSymbol(char *name, SymbolType type, unsigned int value)
 {
 	Symbol newSymbol;
 	SymbolNode *newSymbolNode;
 
-	if(!isSymbolExists(name))
+	if(!isSymbolExists(name) && !isExternSymbolExists(name))
 	{
 
 		newSymbolNode = (SymbolNode *)malloc(sizeof(SymbolNode));
@@ -150,25 +154,27 @@ int insertSymbol(char *name, SymbolType type, unsigned int value)
 
 	} else
 	{
-		return ERROR_SYMBOL_IS_ALREADY_IN_TABLE;
+		return ERROR_SYMBOL_ALREADY_EXISTS;
 	}
 
-	return 0;
+	return NULL;
 
 }
 
-int insertExternSymbolName(char *name)
+/*Inserts an external symbol name to the external symbols list */
+/*Returns NULL if the insertion was successful and an error message otherwise*/
+char *insertExternSymbolName(char *name)
 {
 
 	SymbolNameNode *newNode;
 
-	if(!isExternSymbolExists(name))
+	if(!isExternSymbolExists(name) && !isSymbolExists(name))
 	{
 
 		newNode = (SymbolNameNode *)malloc(sizeof(SymbolNameNode));
 
-	   if(newNode != NULL)
-	   {
+		if(newNode != NULL)
+		{
 
 		   newNode->name = name;
 		   newNode->next = NULL;
@@ -177,27 +183,26 @@ int insertExternSymbolName(char *name)
 		   {
 			   externSymbolList.first = newNode;
 			   externSymbolList.last = newNode;
-		   }else
-		   {
+		   }else {
 			   externSymbolList.last->next = newNode;
 			   externSymbolList.last = newNode;
-
 		   }
 	   } else
 	   {
 		   return ERROR_COULD_NOT_ALLOCATE_MEMORY;
 	   }
-
 	} else
 	{
-		return ERROR_SYMBOL_IS_ALREADY_IN_TABLE;
+		return ERROR_SYMBOL_ALREADY_EXISTS;
 	}
 
-	return 0;
+	return NULL;
 
 }
 
-int insertExternSymbolValue(char *name, unsigned int value)
+/*Inserts an external symbol name and value to the external symbols table(used when creating the .ex file)*/
+/*Returns NULL if the insertion was successful and an error message otherwise*/
+char *insertExternSymbolValue(char *name, unsigned int value)
 {
 	Symbol newSymbol;
 	SymbolNode *newSymbolNode;
@@ -229,11 +234,13 @@ int insertExternSymbolValue(char *name, unsigned int value)
 		   return ERROR_COULD_NOT_ALLOCATE_MEMORY;
 	 }
 
-	return 0;
+	return NULL;
 
 }
 
-int insertEntrySymbol(char *name)
+/*Inserts an entry symbol name to the entry symbol table */
+/*Returns NULL if the insertion was successful and an error message otherwise*/
+char *insertEntrySymbol(char *name)
 {
 
 	SymbolNameNode *newNode;
@@ -266,10 +273,10 @@ int insertEntrySymbol(char *name)
 
 	} else
 	{
-		return ERROR_SYMBOL_IS_ALREADY_IN_TABLE;
+		return ERROR_SYMBOL_ALREADY_EXISTS;
 	}
 
-	return 0;
+	return NULL;
 
 }
 

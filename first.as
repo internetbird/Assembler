@@ -4,10 +4,10 @@ K: cmp A, r3
    add K, r0
    bne STR
    not r4
-   prn [COUNT]A[%K]
+   prn [COUNT]A[r3]
    jsr MAIN
-STR: stop
+STR2: stop
 MAIN: mov K[%STR], A
-K: .data 7, 5, 2
+R: .data 7, 5, 2
 COUNT: .data 0
 A: .string "test"

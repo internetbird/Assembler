@@ -24,7 +24,7 @@ int executeSecondPass()
 
 	instructionMemoryLength = getInstructionCounter();
 
-	while(i < instructionMemoryLength && noErrorsFound)
+	while(i < instructionMemoryLength)
 	{
 
 		currInstructionWord = getInstructionMemoryWord(i);
