@@ -1,3 +1,9 @@
+/******************************************************************************/
+/* Assembler project for course 20465                                         */
+/* Programmed by : Itay Parsiado (ID:062862495) & Shai Aharoni (ID:025332990) */
+/******************************************************************************/
+
+#define _GNU_SOURCE /*For using strdup without compiler warnings*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,8 +18,8 @@ unsigned int DC; /* The data counter */
 
 #define NO_ASSEMBER_ARGUMENTS_ERROR "No assembly files supplied. Usage is: Assembler [file1] [file2] ...\n"
 #define FILE_NAME_NOT_VALID "Assembly file:%s is not valid\n"
-#define FIRST_PASS_FAILED "Executing first pass on file:%s failed.\nTerminating assembler execution.\n"
-#define SECOND_PASS_FAILED "Executing second pass on file:%s failed.\nTerminating assembler execution.\n"
+#define FIRST_PASS_FAILED "Executing first pass on file:%s failed.\n"
+#define SECOND_PASS_FAILED "Executing second pass on file:%s failed.\n"
 #define OB_FILE_CREATION_FAILED "Creating .ob file for assembly file:%s, failed\n"
 #define ENT_FILE_CREATION_FAILED "Creating .ent file for assembly file:%s, failed\n"
 #define EXT_FILE_CREATION_FAILED "Creating .ext file for assembly file:%s, failed\n"
@@ -51,14 +57,14 @@ int main(int argc, char *argv[])
 		{
 			if(!executeFirstPass(file))
 			{
-			   printf(FIRST_PASS_FAILED, assemblyFileName);
-			   exit(1);
+			   fprintf(stderr, FIRST_PASS_FAILED, assemblyFileName);
+			   continue;
 			}
 
 			if(!executeSecondPass())
 			{
-				printf(SECOND_PASS_FAILED, assemblyFileName);
-				exit(1);
+				fprintf(stderr, SECOND_PASS_FAILED, assemblyFileName);
+				continue;
 			}
 
 			fileCreateResult = writeObjFile(fileNameWithoutExtension, InstructionMemory, DataMemory);
@@ -151,8 +157,6 @@ void insertInstructionToMemory(char *word, char *linkerChar)
 		InstructionMemory[IC] = word;
 	}
 
-	printf("Inserted word '%s' to IC:%d\n", InstructionMemory[IC], IC);
-
 	IC++;
 
 }
@@ -165,8 +169,6 @@ void insertIntToDataMemory(int value)
 
 	word = convertBase10toBase2(value);
 	DataMemory[DC] = word;
-
-	printf("Inserted value '%d' to DC:%d\n", value, DC);
 
 }
 
@@ -193,18 +195,16 @@ void resetAssemblyCounters()
 {
 	IC = 0;
 	DC = 0;
-
 }
 
 char *getInstructionMemoryWord(unsigned int index)
 {
 	return InstructionMemory[index];
-
 }
+
 void setInstructionMemoryWord(unsigned int index, char *value, char *linkerChar)
 {
 	InstructionMemory[index] = strcat(value, linkerChar);
-	printf("Inserted word '%s' to IC:%d\n", InstructionMemory[index], index);
 }
 
 

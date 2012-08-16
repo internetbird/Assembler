@@ -1,6 +1,10 @@
+/******************************************************************************/
+/* Assembler project for course 20465                                         */
+/* Programmed by : Itay Parsiado (ID:062862495) & Shai Aharoni (ID:025332990) */
+/******************************************************************************/
+
 #ifndef ASSEMBLER_H_
 #define ASSEMBLER_H_
-
 
 /* Assembler error messages */
 #define COMMAND_NOT_VALID "The command is not valid."

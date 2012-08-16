@@ -1,3 +1,4 @@
+#define _GNU_SOURCE /*For using strdup without compiler warnings*/
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
@@ -42,7 +43,6 @@ char *validateIndex2dAddressingMode(char *operand);
 char *validateRegisterAddressingMode(char *operand);
 
 
-
 /* Validates a given assembly command line        */
 /* returns NULL if the command line is valid      */
 /* or an error message otherwise.                 */
@@ -51,11 +51,12 @@ char *validateAssemblyLine(char *line)
 	CommandParts parts; /* Unfilled fields must be NULL in order for the function to work */
 	char *validationResult = NULL;
 	char *lineToValidate;
+	StatementType type;
 
 	lineToValidate = strdup(line); /*We work on a copy to keep the original line unchanged*/
 
 	parts = parseAssemblyLine(lineToValidate);
-	StatementType type = getStatementType(lineToValidate);
+	type = getStatementType(lineToValidate);
 
 	switch (type){
 

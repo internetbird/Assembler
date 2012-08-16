@@ -1,3 +1,4 @@
+#define _GNU_SOURCE /*For using strdup without compiler warnings*/
 #include "output.h"
 #include "symbols.h"
 #include "assembler.h"
@@ -25,23 +26,17 @@ int writeObjFile(char *filename, char **instructionMemory, char **dataMemory)
 	dataLength = getDataCounter();
 
 
-	printf("Printing obj file...\n");
-
 	if (objfile !=NULL)
 	{
 		/*Write the instruction and data length header*/
 
 		fprintf(objfile, "%s %s\n", convertBase10toBase2(instructionLength) + EIGHT_BIT_OFFSET,convertBase10toBase2(dataLength) + FOUR_BIT_OFFSET);
-		printf("%s %s\n", convertBase10toBase2(instructionLength) + EIGHT_BIT_OFFSET,convertBase10toBase2(dataLength) + FOUR_BIT_OFFSET);
 
 		/*Write the instruction section*/
 		for(i=0; i<instructionLength; i++)
 		{
 			fprintf(objfile, "%s %.16s", convertBase10toBase2(i+IC_STARTUP_VALUE) + EIGHT_BIT_OFFSET, instructionMemory[i]);
-			printf("%s %.16s", convertBase10toBase2(i+IC_STARTUP_VALUE) + EIGHT_BIT_OFFSET, instructionMemory[i]);
-
 			fprintf(objfile, " %c\n", instructionMemory[i][WORD_SIZE]);
-			printf(" %c\n", instructionMemory[i][WORD_SIZE]);
 
 		}
 
@@ -49,8 +44,6 @@ int writeObjFile(char *filename, char **instructionMemory, char **dataMemory)
 		for(i=0; i<dataLength; i++)
 		{
 		    fprintf(objfile, "%s %s\n", convertBase10toBase2(i+instructionLength+ IC_STARTUP_VALUE) + EIGHT_BIT_OFFSET , dataMemory[i]);
-		    printf("%s %s\n", convertBase10toBase2(i+instructionLength+ IC_STARTUP_VALUE) + EIGHT_BIT_OFFSET, dataMemory[i]);
-
 		}
 
 		fclose (objfile);

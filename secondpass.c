@@ -17,7 +17,7 @@ char * word;
 int executeSecondPass()
 {
 
-	int i = 0, noErrorsFound = TRUE;
+	int i = 0, lineNum = 0, noErrorsFound = TRUE;
 	unsigned int instructionMemoryLength;
 	char *currInstructionWord ;
 	Symbol *currSymbol;
@@ -45,7 +45,7 @@ int executeSecondPass()
 			} else /*Report symbol not found error */
 			{
 
-				addAssemblerError(SYMBOL_NOT_VALID, i);
+				addAssemblerError(SYMBOL_NOT_VALID, lineNum);
 				noErrorsFound = FALSE;
 
 			}
@@ -59,13 +59,18 @@ int executeSecondPass()
 				setInstructionMemoryWord(i, convertBase10toBase2(currSymbol->value- getInstructionCounter() + IC_STARTUP_VALUE), LINKER_RELOCATABLE);
 			} else
 			{
-				addAssemblerError(SYMBOL_NOT_VALID, i);
+				addAssemblerError(SYMBOL_NOT_VALID, lineNum);
 				noErrorsFound = FALSE;
 
 			}
+
+		} else /*It's an instruction so increase the line counter */
+		{
+			lineNum++;
 		}
 
 		i++;
+
 	}
 
 	return noErrorsFound;
